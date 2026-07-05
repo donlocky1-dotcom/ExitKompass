@@ -186,6 +186,13 @@ damit die Engine ohne Kalender-/UI-Abhängigkeit testbar bleibt:
   Sperrzeit-Ausnahme-Heuristik (A5.4) zur Entscheidung wahrscheinlich/
   unwahrscheinlich; S3 (Eigenkündigung) immer 12 Wochen Sperrzeit + ¼;
   S4 (Bleiben) = Netto-Gehaltsfortschreibung als Baseline.
+- **A7.9 Bezahlte Freistellung (S1/S2):** Ist `paidRelease` gesetzt, läuft
+  das Arbeitsverhältnis bis zum regulären Ende (`regularEndDate`) weiter:
+  volles Gehalt bis dahin, Abfindung/Restzahlung zu diesem Zeitpunkt, ALG
+  erst danach – und kein §158-Ruhen (die ordentliche Kündigungsfrist ist
+  gewahrt). Für S3 (Eigenkündigung) greift die Freistellung nicht. Eine
+  Anrechnung anderweitigen Verdienstes während der Freistellung
+  (§ 615 S. 2 BGB) ist nicht modelliert.
 - **A7.7 Krankenversicherung in der Lücke:** Einkommenslose Monate nach dem
   Austritt werden als 0 geführt und mit einem KV-Flag markiert; ein
   konkreter KV-Beitrag in der Lücke wird (noch) nicht gerechnet (Spec §13:
