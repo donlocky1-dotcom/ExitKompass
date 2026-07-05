@@ -160,4 +160,71 @@ void main() {
       expect(s1.flags.any((f) => f.code == 'kv_luecke'), isTrue);
     });
   });
+
+  group('M5 – paid release (Freistellung)', () {
+    // Exit already at month 3, but the regular end (and thus the paid
+    // release) runs until month 9.
+    EmploymentData employmentReleaseUntil9() => EmploymentData(
+          grossMonthCents: eur(5000),
+          entryDate: DateTime(2016, 1, 1),
+          regularEndDate: DateTime(2026, 10, 1), // 9 months after reference
+        );
+    OfferData offerExit3(bool release) =>
+        _offer(exit: DateTime(2026, 4, 1), release: release);
+
+    test('salary continues to the regular end and severance lands there', () {
+      final r = _aggregate(
+        employment: employmentReleaseUntil9(),
+        offer: offerExit3(true),
+      );
+      final s1 = r.scenarios[ScenarioType.kuendigungAg]!;
+      // Salary runs through month 8 (regular end at month 9), not month 3.
+      expect(s1.monthlySource[3], CashflowSource.salary);
+      expect(s1.monthlySource[8], CashflowSource.salary);
+      expect(s1.monthlySource[9], CashflowSource.severance);
+      // ALG only after the regular end.
+      expect(s1.monthlySource[10], CashflowSource.alg);
+      expect(s1.flags.any((f) => f.code == 'freistellung'), isTrue);
+    });
+
+    test('paid release beats the same offer without release (more salary months)',
+        () {
+      final withRelease = _aggregate(
+        employment: employmentReleaseUntil9(),
+        offer: offerExit3(true),
+      ).scenarios[ScenarioType.kuendigungAg]!;
+      final withoutRelease = _aggregate(
+        employment: employmentReleaseUntil9(),
+        offer: offerExit3(false),
+      ).scenarios[ScenarioType.kuendigungAg]!;
+      expect(withRelease.cumulativeNetCents,
+          greaterThan(withoutRelease.cumulativeNetCents));
+    });
+
+    test('paid release suppresses the § 158 suspension (notice period observed)', () {
+      // Without release: exit before regular end + severance → § 158 ruhen.
+      final withoutRelease = _aggregate(
+        employment: employmentReleaseUntil9(),
+        offer: offerExit3(false),
+      ).scenarios[ScenarioType.kuendigungAg]!;
+      expect(withoutRelease.flags.any((f) => f.code == 'ruhen_158'), isTrue);
+
+      final withRelease = _aggregate(
+        employment: employmentReleaseUntil9(),
+        offer: offerExit3(true),
+      ).scenarios[ScenarioType.kuendigungAg]!;
+      expect(withRelease.flags.any((f) => f.code == 'ruhen_158'), isFalse);
+    });
+
+    test('resignation (S3) ignores paid release', () {
+      final r = _aggregate(
+        employment: employmentReleaseUntil9(),
+        offer: offerExit3(true),
+      );
+      final s3 = r.scenarios[ScenarioType.eigenkuendigung]!;
+      // Salary ends at the chosen exit (month 3), no freistellung flag.
+      expect(s3.monthlySource[3], isNot(CashflowSource.salary));
+      expect(s3.flags.any((f) => f.code == 'freistellung'), isFalse);
+    });
+  });
 }

@@ -286,6 +286,7 @@ class _ScenarioBuilder {
             30;
 
     exitOffset = _clamp(_monthsBetween(referenceDate, offer.exitDate));
+    regularEndOffset = _clamp(_monthsBetween(referenceDate, employment.regularEndDate));
   }
 
   final UserProfile profile;
@@ -305,6 +306,7 @@ class _ScenarioBuilder {
   late final int tenureYears;
   late final int entitlementMonths;
   late final int exitOffset;
+  late final int regularEndOffset;
 
   int _clamp(int offset) => offset.clamp(0, horizon);
 
@@ -325,13 +327,28 @@ class _ScenarioBuilder {
     final src = List<CashflowSource>.filled(horizon, CashflowSource.gap);
     final flags = <RiskFlag>[];
 
-    // 1) Salary until the exit month.
-    for (var m = 0; m < exitOffset && m < horizon; m++) {
+    // Paid release (Freistellung) applies to the offer-based scenarios
+    // (S1/S2): the employment continues to the regular end date, so full
+    // salary is paid until then and ALG starts only afterwards. A
+    // resignation (S3) ends at the chosen exit date.
+    final usePaidRelease = offer.paidRelease && type != ScenarioType.eigenkuendigung;
+    final endOffset = usePaidRelease ? regularEndOffset : exitOffset;
+
+    // 1) Salary until the employment actually ends.
+    for (var m = 0; m < endOffset && m < horizon; m++) {
       net[m] = netSalaryMonth;
       src[m] = CashflowSource.salary;
     }
+    if (usePaidRelease && regularEndOffset > exitOffset) {
+      flags.add(const RiskFlag(
+        'freistellung',
+        'Während der bezahlten Freistellung läuft dein Gehalt bis zum '
+            'regulären Ende weiter; das ALG beginnt erst danach.',
+      ));
+    }
 
-    // 2) Severance + settlements as a lump in the exit month (S1/S2 only).
+    // 2) Severance + settlements as a lump when the employment ends
+    //    (S1/S2 only).
     final hasSeverance = type != ScenarioType.eigenkuendigung;
     var blockingMonths = 0;
     var suspensionMonths = 0;
@@ -347,9 +364,9 @@ class _ScenarioBuilder {
       // refunded later via the tax assessment.
       final severanceNet =
           offer.severanceGrossCents - sev.taxOnSeveranceRegularCents + _settlementsNet();
-      if (exitOffset < horizon) {
-        net[exitOffset] += severanceNet;
-        src[exitOffset] = CashflowSource.severance;
+      if (endOffset < horizon) {
+        net[endOffset] += severanceNet;
+        src[endOffset] = CashflowSource.severance;
       }
       if (sev.savingsCents > 0) {
         flags.add(RiskFlag(
@@ -359,7 +376,7 @@ class _ScenarioBuilder {
               'Steuererklärung im Folgejahr zurück, nicht sofort.',
         ));
         // Refund roughly a year after the exit (next year's assessment).
-        final refundOffset = exitOffset + 12;
+        final refundOffset = endOffset + 12;
         if (refundOffset < horizon) {
           net[refundOffset] += sev.savingsCents;
           if (src[refundOffset] == CashflowSource.gap) {
@@ -369,7 +386,9 @@ class _ScenarioBuilder {
       }
 
       // § 158 suspension when the ordinary notice period was shortened.
-      suspensionMonths = _suspensionMonths();
+      // With a paid release until the regular end, the period is observed,
+      // so no suspension applies.
+      suspensionMonths = usePaidRelease ? 0 : _suspensionMonths();
       if (suspensionMonths > 0) {
         flags.add(RiskFlag(
           'ruhen_158',
@@ -415,9 +434,10 @@ class _ScenarioBuilder {
       }
     }
 
-    // 4) ALG phase: starts after the exit, delayed by suspension and/or
-    //    blocking period; blocking also shortens the duration by a quarter.
-    final algStart = _clamp(exitOffset + max(blockingMonths, suspensionMonths));
+    // 4) ALG phase: starts after the employment ends, delayed by
+    //    suspension and/or blocking period; blocking also shortens the
+    //    duration by a quarter.
+    final algStart = _clamp(endOffset + max(blockingMonths, suspensionMonths));
     final effectiveMonths =
         blockingMonths > 0 ? (entitlementMonths * 3 + 3) ~/ 4 : entitlementMonths;
     final algEnd = min(algStart + effectiveMonths, horizon);
@@ -436,8 +456,9 @@ class _ScenarioBuilder {
       ));
     }
 
-    // 5) Gap flag: any zero-income month after the exit (health insurance).
-    final hasGap = src.skip(exitOffset).any((s) => s == CashflowSource.gap);
+    // 5) Gap flag: any zero-income month after the employment ends
+    //    (health insurance).
+    final hasGap = src.skip(endOffset).any((s) => s == CashflowSource.gap);
     if (hasGap) {
       flags.add(const RiskFlag(
         'kv_luecke',

@@ -9,6 +9,7 @@ import '../timeline/timeline.dart';
 import '../widgets/disclaimer_footer.dart';
 import 'comparison_tab.dart';
 import 'ratgeber_screen.dart';
+import 'settings_screen.dart';
 import 'timeline_screen.dart';
 
 /// Post-wizard hub with three tabs: scenario comparison, personalised
@@ -37,15 +38,6 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     await Printing.sharePdf(bytes: bytes, filename: 'exitkompass-dossier.pdf');
   }
 
-  Future<void> _clearData() async {
-    await ref.read(wizardProvider.notifier).clearSaved();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Gespeicherte Daten wurden gelöscht.')),
-    );
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,13 +49,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             tooltip: 'Als PDF-Dossier teilen',
             onPressed: _sharePdf,
           ),
-          PopupMenuButton<String>(
-            onSelected: (v) {
-              if (v == 'clear') _clearData();
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'clear', child: Text('Gespeicherte Daten löschen')),
-            ],
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Einstellungen',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            ),
           ),
         ],
       ),
