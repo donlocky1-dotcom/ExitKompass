@@ -1,6 +1,8 @@
 /// ExitKompass calculation engine (tax year 2026).
 ///
-/// Modules M1 (income tax), M2 (social insurance), M3 (severance) and
-/// M4 (unemployment benefit ALG 1) will live here. All monetary amounts
-/// are passed and returned as `int` values in **cents**.
+/// All monetary amounts are passed and returned as `int` values in
+/// **cents** unless documented otherwise.
 library;
+
+export 'src/params.dart';
+export 'src/params_2026_data.dart' show params2026Json;
