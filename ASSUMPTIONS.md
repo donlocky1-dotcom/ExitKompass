@@ -152,6 +152,48 @@ Session-Proxy nicht abrufbar. **TODO vor Release.**
   auf 5 Jahre erweiterten Rahmenfrist voraus (Eingabe des Aufrufers);
   Vordienstzeiten-Anrechnung nach § 147 Abs. 3/4 ist nicht abgebildet.
 
+## A7 – M5 Szenario-Aggregator (v1)
+
+Erste Fassung des Aggregators (Spec §5 M5, §3). Bewusste Vereinfachungen,
+damit die Engine ohne Kalender-/UI-Abhängigkeit testbar bleibt:
+
+- **A7.1 Monatsraster statt Kalendertagen:** Der Aggregator rechnet auf
+  **Monats-Offsets** (Monat 0 = `referenceDate`). Datumsangaben werden über
+  ganze Monatsdifferenzen in Offsets umgerechnet; tagesgenaue Kalenderlogik
+  (anteilige erste/letzte Monate) ist Sache der UI/Wizard-Schicht.
+- **A7.2 Nettogehalt/Monat:** = Jahresnetto (M1+M2 auf `bruttoMonat×12 +
+  Sonderzahlungen`) ÷ 12. Sonderzahlungen werden also gleichmäßig verteilt
+  (kein separater Einmalzahlungs-Lohnsteuerabzug im Auszahlungsmonat).
+- **A7.3 Abfindungs-Steuerbasis:** Als „zvE_rest im Auszahlungsjahr" wird
+  das **volle** zu versteuernde Jahresgehalt angesetzt. Da der/die
+  Beschäftigte unterjährig ausscheidet, überschätzt das das Rest-zvE und
+  **unterschätzt** damit den Fünftelvorteil → konservativ (die App
+  verspricht keine zu hohe Ersparnis). Tagesgenaue YTD-Berechnung ist eine
+  spätere Verfeinerung.
+- **A7.4 Liquiditätseffekt Fünftelregelung:** Im Austrittsmonat wird die
+  Abfindung netto nach **Regelbesteuerung** angesetzt (so behält der
+  Arbeitgeber ein); die Fünftel-Ersparnis fließt als separater
+  Erstattungs-Zufluss rund **12 Monate später** (nächste Veranlagung) ein
+  und wird zusätzlich als Flag ausgewiesen (Spec §5/§8).
+- **A7.5 ALG-Start & Dauer:** ALG beginnt im Austrittsmonat, verzögert um
+  Sperrzeit bzw. §158-Ruhen (in Monate gerundet: 12 Wochen ≈ 3 Monate).
+  Die Anspruchsdauer (§147) wird aus der Betriebszugehörigkeit als
+  Versicherungsmonate abgeleitet (gedeckelt auf 60) – die genaue
+  Rahmenfrist-Prüfung bleibt der Eingabe vorbehalten. Bei Sperrzeit wird
+  die Dauer um ein Viertel gekürzt (aufgerundet).
+- **A7.6 Szenario-Zuordnung:** S1 (AG-Kündigung) ohne Sperrzeit, aber mit
+  §158-Ruhen bei verkürzter Frist; S2 (Aufhebung) nutzt die
+  Sperrzeit-Ausnahme-Heuristik (A5.4) zur Entscheidung wahrscheinlich/
+  unwahrscheinlich; S3 (Eigenkündigung) immer 12 Wochen Sperrzeit + ¼;
+  S4 (Bleiben) = Netto-Gehaltsfortschreibung als Baseline.
+- **A7.7 Krankenversicherung in der Lücke:** Einkommenslose Monate nach dem
+  Austritt werden als 0 geführt und mit einem KV-Flag markiert; ein
+  konkreter KV-Beitrag in der Lücke wird (noch) nicht gerechnet (Spec §13:
+  PKV/KV-Lücke vereinfacht mit Hinweis).
+- **A7.8 Genauigkeitsziel:** Das Spec-§5-Ziel von ±2 % bezieht sich auf die
+  Bausteine M1–M4 (gegen BMF/BA verifiziert, VERIFY.md); der Aggregator
+  komponiert diese nur monatsweise.
+
 ## A6 – Sprach- und Historien-Migration (2026-07-05)
 
 Die Engine wurde ursprünglich mit deutschen Bezeichnern, Kommentaren und

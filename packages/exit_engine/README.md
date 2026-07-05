@@ -1,8 +1,9 @@
 # exit_engine
 
 Rechen-Engine des **ExitKompass** für das Steuer-/Beitragsjahr **2026**:
-Einkommensteuer (M1), Sozialversicherung (M2), Abfindung (M3) und
-ALG 1 (M4). Reine Dart-Bibliothek ohne Flutter-Abhängigkeit.
+Einkommensteuer (M1), Sozialversicherung (M2), Abfindung (M3),
+ALG 1 (M4) und Szenario-Aggregator (M5). Reine Dart-Bibliothek ohne
+Flutter-Abhängigkeit.
 
 **Konventionen**
 
@@ -22,7 +23,7 @@ ALG 1 (M4). Reine Dart-Bibliothek ohne Flutter-Abhängigkeit.
 ```bash
 dart pub get
 dart analyze            # ohne Findings
-dart test               # 99 Tests
+dart test               # 111 Tests
 dart test test/golden # nur die Golden-Gesamtprofile
 ```
 
@@ -53,7 +54,7 @@ final wage = annualWageTax(
   taxClass: TaxClass.i,
   age: 30,
 );
-print(wage.wageTaxCents); // 932800  (9.328,00 €)
+print(wage.wageTaxCents); // 938900  (9.389,00 €)
 print(wage.soliCents);    // 0       (unter der Freigrenze)
 ```
 
@@ -82,7 +83,7 @@ final net = annualNetIncome(
   taxClass: TaxClass.i,
   age: 30,
 );
-print(net.netMonthCents); // 313517  (3.135,17 €/Monat)
+print(net.netMonthCents); // 313008  (3.130,08 €/Monat)
 ```
 
 ## M3 – Abfindung (Fünftelregelung)
@@ -121,8 +122,8 @@ final alg = alg1Benefit(
   taxClass: TaxClass.i,
   age: 30,
 );
-print(alg.benefitDayCents);   // 6357    (63,57 €/Tag)
-print(alg.benefitMonthCents); // 190710  (1.907,10 €/Monat)
+print(alg.benefitDayCents);   // 6346    (63,46 €/Tag)
+print(alg.benefitMonthCents); // 190380  (1.903,80 €/Monat)
 
 final days = alg1EntitlementDays(insuredMonths: 24, age: 30); // 360
 
@@ -131,7 +132,7 @@ final days = alg1EntitlementDays(insuredMonths: 24, age: 30); // 360
 final block = blockingPeriodSimulation(
     entitlementDays: days, benefitDayCents: alg.benefitDayCents);
 print(block.reductionDays);    // 90
-print(block.lostBenefitCents); // 572130  (5.721,30 € endgültig verloren)
+print(block.lostBenefitCents); // 571140  (5.711,40 € endgültig verloren)
 
 // Spec-§5-Heuristik: Aufhebung wegen drohender betriebsbedingter
 // Kündigung, Abfindung ≤ 0,5 Monatsgehälter je Beschäftigungsjahr
@@ -152,6 +153,42 @@ final susp = suspension158(
 );
 print(susp.applicableShare); // 0.45
 print(susp.suspensionDays);  // 60 (gedeckelt auf die fehlende Frist)
+```
+
+## M5 – Szenario-Aggregator
+
+Erzeugt aus Profil-, Beschäftigungs- und Angebotsdaten je Szenario
+(S1 AG-Kündigung · S2 Aufhebung · S3 Eigenkündigung · S4 Bleiben) einen
+**Monats-Cashflow** (Gehalt → Abfindung → ALG → Lücke), kumuliert netto,
+liefert Deltas zur Baseline, das beste Szenario und Risiko-Flags. Rechnet
+auf Monats-Offsets (Details/Vereinfachungen: ASSUMPTIONS.md A7).
+
+```dart
+final result = aggregateScenarios(
+  profile: const UserProfile(
+    birthYear: 1986,
+    taxClass: TaxClass.i,
+    state: Bundesland.nordrheinWestfalen,
+  ),
+  employment: EmploymentData(
+    grossMonthCents: 500000,               // 5.000 €/Monat
+    entryDate: DateTime(2016, 1, 1),
+    regularEndDate: DateTime(2026, 4, 1),
+  ),
+  offer: OfferData(
+    severanceGrossCents: 5000000,          // 50.000 € Abfindung
+    exitDate: DateTime(2026, 4, 1),
+  ),
+  referenceDate: DateTime(2026, 1, 1),
+  horizonMonths: 24,
+);
+
+final s1 = result.scenarios[ScenarioType.kuendigungAg]!;
+print(s1.cumulativeNetCents);                       // Netto-Summe über 24 Monate
+print(s1.monthlyNetCents);                          // Cashflow je Monat (Chart)
+print(result.deltaToBaselineCents(ScenarioType.kuendigungAg)); // Δ zu „Bleiben"
+print(result.bestScenario);                         // bestes Szenario
+for (final f in s1.flags) print(f.message);         // Risiko-/Info-Hinweise
 ```
 
 ## Parameter aktualisieren
