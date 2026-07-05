@@ -7,6 +7,8 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
 
 - Onboarding mit Pflicht-Disclaimer (§ 9)
 - 4-Schritt-Wizard: Situation · Person & Steuer · Job · Angebot
+- Abfindungshöhe-Schätzer (M6): Bandbreite je Verhandlungsposition
+  (§ 1a/§ 10 KSchG), Mittelwert per Klick übernehmen
 - Ergebnis: Szenario-Vergleich der vier Optionen (4-Balken-Chart, bestes
   Szenario, Delta zur Baseline „Bleiben")
 - Detail je Szenario: monatlicher Netto-Cashflow (fl_chart) + Risiko-/

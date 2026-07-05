@@ -201,6 +201,29 @@ damit die Engine ohne Kalender-/UI-Abhängigkeit testbar bleibt:
   Bausteine M1–M4 (gegen BMF/BA verifiziert, VERIFY.md); der Aggregator
   komponiert diese nur monatsweise.
 
+## A9 – M6 Abfindungshöhe-Schätzer
+
+Neues Engine-Modul (Marktrecherche: beide Wettbewerbs-Rechner führen mit
+einer Höhen-Schätzung). Bewusst als **Orientierung, kein Rechtsanspruch**:
+
+- **A9.1 Faktor-Bänder:** heuristische Bandbreiten je Verhandlungsposition
+  (schwach 0,25–0,5 · standard 0,5–1,0 · stark 1,0–1,5), abgeleitet aus der
+  arbeitsgerichtlichen Faustformel (0,5 Bruttomonatsgehälter je Jahr). Keine
+  amtlichen Werte – die tatsächliche Höhe hängt vom Einzelfall ab.
+- **A9.2 Kleinbetrieb (<10):** verschiebt das Band um 0,25 nach unten
+  (KSchG greift i. d. R. nicht → schwächere Position). Vereinfachung.
+- **A9.3 § 10 KSchG:** Kappung des oberen Bandendes auf 15 Monatsgehälter
+  (ab 50/15 J.) bzw. 18 (ab 55/20 J.). Gilt genau genommen nur für die
+  **gerichtliche Auflösung**, wird hier als Orientierungs-Obergrenze auch
+  auf die freie Verhandlung angewandt und als solche gekennzeichnet.
+- **A9.4 § 1a KSchG korrekt eingeordnet:** Der Faktor 0,5 ist die
+  Regelabfindung nur bei betriebsbedingter Kündigung mit Abfindungsangebot
+  und Klageverzicht – **nicht** ein allgemeines gesetzliches Minimum (anders
+  als bei Wettbewerber 2 dargestellt).
+- **A9.5 Verwendung:** Der Mittelwert der Bandbreite kann per Button die
+  Abfindungs-Eingabe vorbefüllen; die Verhandlungsstärke selbst ist
+  transienter UI-Zustand (nicht persistiert, keine DB-Migration nötig).
+
 ## A8 – Ratgeber & Fristen (Content, RDG/StBerG-Leitlinie)
 
 Die App enthält neben dem Rechner einen Ratgeber-Bereich und eine
