@@ -2,8 +2,8 @@
 
 Rechen-Engine des **ExitKompass** für das Steuer-/Beitragsjahr **2026**:
 Einkommensteuer (M1), Sozialversicherung (M2), Abfindung (M3),
-ALG 1 (M4) und Szenario-Aggregator (M5). Reine Dart-Bibliothek ohne
-Flutter-Abhängigkeit.
+ALG 1 (M4), Szenario-Aggregator (M5) und Abfindungshöhe-Schätzer (M6).
+Reine Dart-Bibliothek ohne Flutter-Abhängigkeit.
 
 **Konventionen**
 
@@ -23,7 +23,7 @@ Flutter-Abhängigkeit.
 ```bash
 dart pub get
 dart analyze            # ohne Findings
-dart test               # 111 Tests
+dart test               # 123 Tests
 dart test test/golden # nur die Golden-Gesamtprofile
 ```
 
@@ -189,6 +189,26 @@ print(s1.monthlyNetCents);                          // Cashflow je Monat (Chart)
 print(result.deltaToBaselineCents(ScenarioType.kuendigungAg)); // Δ zu „Bleiben"
 print(result.bestScenario);                         // bestes Szenario
 for (final f in s1.flags) print(f.message);         // Risiko-/Info-Hinweise
+```
+
+## M6 – Abfindungshöhe-Schätzer
+
+Schätzt aus der arbeitsgerichtlichen Faustformel (0,5 Bruttomonatsgehälter
+je Beschäftigungsjahr) eine **Verhandlungs-Bandbreite** je nach Position,
+mit § 10-KSchG-Kappung. Orientierung, kein Rechtsanspruch (ASSUMPTIONS A9).
+
+```dart
+final e = estimateSeverance(
+  grossMonthCents: 350000,   // 3.500 €/Monat
+  tenureYears: 8,
+  age: 40,
+  strength: NegotiationStrength.standard, // schwach / standard / stark
+);
+print(e.lowCents);            // 1400000  (14.000 €, Faktor 0,5)
+print(e.highCents);           // 2800000  (28.000 €, Faktor 1,0)
+print(e.pointCents);          // 2100000  (21.000 €, Bandmitte)
+print(e.regelabfindungCents); // 1400000  (§ 1a-Referenz)
+print(e.cappedByKschG10);     // false
 ```
 
 ## Parameter aktualisieren

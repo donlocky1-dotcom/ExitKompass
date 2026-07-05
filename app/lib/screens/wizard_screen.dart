@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../state/wizard.dart';
+import '../util/format.dart';
 import '../util/labels.dart';
 import 'home_shell.dart';
 
@@ -229,11 +230,9 @@ class _OfferStep extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _IntField(
-          label: 'Abfindung brutto (€)',
-          value: data.severanceGrossEuro,
-          onChanged: (v) => notifier.update((d) => d.copyWith(severanceGrossEuro: v)),
-        ),
+        const _SeveranceEstimator(),
+        const SizedBox(height: 12),
+        const _SeveranceField(),
         const SizedBox(height: 12),
         _DateField(
           label: 'Zugang der Kündigung / des Angebots',
@@ -271,6 +270,138 @@ class _OfferStep extends ConsumerWidget {
         const SizedBox(height: 4),
         Text('Betrachtungszeitraum', style: Theme.of(context).textTheme.bodySmall),
       ],
+    );
+  }
+}
+
+/// Estimates a negotiable severance range (M6) from the entered salary,
+/// tenure and age, and lets the user apply the midpoint to the severance
+/// field. The negotiation strength is transient UI state.
+class _SeveranceEstimator extends ConsumerStatefulWidget {
+  const _SeveranceEstimator();
+
+  @override
+  ConsumerState<_SeveranceEstimator> createState() => _SeveranceEstimatorState();
+}
+
+class _SeveranceEstimatorState extends ConsumerState<_SeveranceEstimator> {
+  NegotiationStrength _strength = NegotiationStrength.standard;
+  bool _smallBusiness = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ref.watch(wizardProvider);
+    final theme = Theme.of(context);
+    final tenureYears =
+        (data.exitDate.difference(data.entryDate).inDays / 365).floor().clamp(0, 60);
+    final age = data.exitDate.year - data.birthYear;
+
+    final estimate = estimateSeverance(
+      grossMonthCents: data.grossMonthEuro * 100,
+      tenureYears: tenureYears,
+      age: age,
+      strength: _strength,
+      smallBusiness: _smallBusiness,
+    );
+
+    return Card(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Abfindung schätzen', style: theme.textTheme.titleSmall),
+            Text(
+              'Höhe noch offen? Schätze eine realistische Bandbreite '
+              '($tenureYears Jahre, Alter $age).',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<NegotiationStrength>(
+              segments: const [
+                ButtonSegment(value: NegotiationStrength.schwach, label: Text('Schwach')),
+                ButtonSegment(value: NegotiationStrength.standard, label: Text('Standard')),
+                ButtonSegment(value: NegotiationStrength.stark, label: Text('Stark')),
+              ],
+              selected: {_strength},
+              onSelectionChanged: (s) => setState(() => _strength = s.first),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              value: _smallBusiness,
+              onChanged: (v) => setState(() => _smallBusiness = v),
+              title: const Text('Kleinbetrieb (unter 10 Mitarbeiter)'),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Realistische Spanne: '
+              '${euroFromCents(estimate.lowCents, withDecimals: false)} – '
+              '${euroFromCents(estimate.highCents, withDecimals: false)}',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(color: theme.colorScheme.primary),
+            ),
+            Text(
+              'Regelabfindung (§ 1a, Faktor 0,5): '
+              '${euroFromCents(estimate.regelabfindungCents, withDecimals: false)}'
+              '${estimate.cappedByKschG10 ? ' · gekappt auf ${estimate.kschG10CapMonths} Monatsgehälter (§ 10 KSchG)' : ''}',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: const Icon(Icons.arrow_downward, size: 18),
+                label: const Text('Mittelwert übernehmen'),
+                onPressed: () => ref.read(wizardProvider.notifier).update(
+                      (d) => d.copyWith(severanceGrossEuro: (estimate.pointCents / 100).round()),
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Severance amount field that syncs external updates (e.g. from the
+/// estimator's "übernehmen") into the text box when it is not focused.
+class _SeveranceField extends ConsumerStatefulWidget {
+  const _SeveranceField();
+
+  @override
+  ConsumerState<_SeveranceField> createState() => _SeveranceFieldState();
+}
+
+class _SeveranceFieldState extends ConsumerState<_SeveranceField> {
+  late final TextEditingController _controller =
+      TextEditingController(text: ref.read(wizardProvider).severanceGrossEuro.toString());
+  final FocusNode _focus = FocusNode();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final value = ref.watch(wizardProvider).severanceGrossEuro;
+    if (!_focus.hasFocus && (int.tryParse(_controller.text) ?? -1) != value) {
+      _controller.text = value.toString();
+    }
+    return TextFormField(
+      controller: _controller,
+      focusNode: _focus,
+      decoration: const InputDecoration(labelText: 'Abfindung brutto (€)'),
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onChanged: (t) => ref
+          .read(wizardProvider.notifier)
+          .update((d) => d.copyWith(severanceGrossEuro: int.tryParse(t) ?? 0)),
     );
   }
 }
