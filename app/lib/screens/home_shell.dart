@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:printing/printing.dart';
 
+import '../pdf/dossier.dart';
+import '../state/wizard.dart';
+import '../timeline/timeline.dart';
 import '../widgets/disclaimer_footer.dart';
 import 'comparison_tab.dart';
 import 'ratgeber_screen.dart';
@@ -7,22 +13,43 @@ import 'timeline_screen.dart';
 
 /// Post-wizard hub with three tabs: scenario comparison, personalised
 /// deadlines and the Ratgeber knowledge base.
-class HomeShell extends StatefulWidget {
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
   @override
-  State<HomeShell> createState() => _HomeShellState();
+  ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
 
   static const _titles = ['Szenario-Vergleich', 'Fristen', 'Ratgeber'];
 
+  Future<void> _sharePdf() async {
+    final data = ref.read(wizardProvider);
+    final bytes = await buildDossierPdf(
+      data: data,
+      result: data.compute(),
+      timeline: buildTimeline(data),
+      regularTtf: await rootBundle.load('assets/fonts/DejaVuSans.ttf'),
+      boldTtf: await rootBundle.load('assets/fonts/DejaVuSans-Bold.ttf'),
+    );
+    await Printing.sharePdf(bytes: bytes, filename: 'exitkompass-dossier.pdf');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_index])),
+      appBar: AppBar(
+        title: Text(_titles[_index]),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Als PDF-Dossier teilen',
+            onPressed: _sharePdf,
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(

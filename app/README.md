@@ -16,10 +16,13 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
 - „Ratgeber"-Tab: belegte, datierte Wissens-Artikel (Verhandlung,
   Rechtsgrundlagen, Arbeitsagentur) – allgemeine Rechtsinfo, keine
   Einzelfallberatung (siehe ASSUMPTIONS.md A8)
+- PDF-Dossier: „Entscheidungs-Dossier" (Eingaben, Szenario-Vergleich,
+  Hinweise, Fristen, Disclaimer) via Teilen-Button; eingebettete
+  DejaVu-Schrift für korrekte €/Umlaut-Darstellung
 - State: Riverpod (in-memory, kein Backend/Konto/Cloud)
 
-Noch offen (Woche 5–6): RevenueCat/Paywall, PDF-Export, Drift-Persistenz,
-Timeline & lokale Notifications.
+Noch offen (Woche 5–6): RevenueCat/Paywall, Drift-Persistenz,
+lokale Push-Erinnerungen für die Fristen.
 
 ## Entwicklung
 
