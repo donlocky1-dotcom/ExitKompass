@@ -2,13 +2,12 @@
 
 Ablageort für die Projektdokumentation des ExitKompass.
 
-> **Hinweis (2026-07-04):** Die referenzierte Spezifikation
-> `ExitKompass_Spezifikation_v1.md` sowie eine `CLAUDE.md` waren zum
-> Start der Engine-Entwicklung **nicht im Repository vorhanden** (auf
-> keinem Branch). Die Engine (M1–M4) wurde daher auf Basis der
-> Aufgabenbeschreibung und der offiziellen Rechtslage 2026 gebaut;
-> alle daraus resultierenden Annahmen sind in der Wurzel-Datei
-> [`ASSUMPTIONS.md`](../ASSUMPTIONS.md) dokumentiert.
-> Bitte die Spezifikation hier nachreichen, damit die Parameter aus
-> Spec §5 gegen `packages/exit_engine/assets/params_2026.json`
-> abgeglichen werden können.
+Hier liegt die Produktspezifikation
+[`ExitKompass_Spezifikation_v1.md`](ExitKompass_Spezifikation_v1.md).
+
+> **Historie:** Die Engine (M1–M4) wurde zunächst ohne die Spec auf
+> Basis der offiziellen Rechtslage 2026 gebaut (Spec und CLAUDE.md
+> wurden am 2026-07-05 nachgereicht). Der anschließende Abgleich von
+> `packages/exit_engine/lib/params/params_2026.json` gegen Spec §5
+> ergab 100 % Übereinstimmung; Details und alle Annahmen in
+> [`ASSUMPTIONS.md`](../ASSUMPTIONS.md) (A0).
