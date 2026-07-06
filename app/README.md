@@ -14,6 +14,11 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
   (ASSUMPTIONS.md A9.6).
 - Ergebnis: Szenario-Vergleich der vier Optionen (4-Balken-Chart, bestes
   Szenario, Delta zur Baseline „Bleiben")
+- „Passende Hilfe"-Panel (dezent, aufklappbar unter dem Vergleich):
+  neutrale Anlaufstellen (Fachanwalt, Rechtsschutz, Beratungshilfe,
+  Agentur für Arbeit, Krankenkasse, Betriebsrat) – **ohne** Tracking,
+  Werbung oder Vermittlung; die für die Situation relevanten Einträge
+  werden nach oben sortiert (ASSUMPTIONS.md A10)
 - Detail je Szenario: monatlicher Netto-Cashflow (fl_chart) + Risiko-/
   Info-Hinweise
 - „Fristen"-Tab: personalisierte Deadline-Timeline aus den Eingaben

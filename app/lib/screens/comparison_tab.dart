@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
 import '../util/labels.dart';
+import '../widgets/help_panel.dart';
 import 'detail_screen.dart';
 
 /// Comparison tab (spec §4 screen 6): the four scenarios compared by their
@@ -42,9 +43,18 @@ class ComparisonTab extends ConsumerWidget {
         const SizedBox(height: 16),
         for (final type in order)
           _ScenarioCard(result: result, type: type, isBest: type == best),
+        const SizedBox(height: 8),
+        HelpPanel(flagCodes: _flagCodesOf(result)),
       ],
     );
   }
+
+  /// Union of the risk-flag codes across every scenario – drives which
+  /// help resources are surfaced first.
+  static Set<String> _flagCodesOf(AggregateResult result) => {
+        for (final scenario in result.scenarios.values)
+          for (final flag in scenario.flags) flag.code,
+      };
 }
 
 class _ComparisonChart extends StatelessWidget {

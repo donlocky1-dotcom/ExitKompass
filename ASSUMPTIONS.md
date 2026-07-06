@@ -269,6 +269,31 @@ Rechts-/Steuerberatung im Einzelfall wird:
   geprüft werden (Spec §9 Nr. 4). Ein Test (`content_test.dart`)
   erzwingt Quellenangaben und Stand-Datum je Artikel.
 
+## A10 – „Passende Hilfe"-Panel (bewusst nicht-kommerziell)
+
+Marktrecherche: die Wettbewerber monetarisieren genau diesen Moment über
+Affiliate-Links, Werbeplätze oder Anwalts-Lead-Generierung. ExitKompass
+setzt das **absichtlich anders** um (Privacy-USP, Einmalkauf-Modell, Spec §8):
+
+- **A10.1 Kein Tracking, keine Vermittlung, keine Werbung:** Das Panel
+  (`content/help_resources.dart`, `widgets/help_panel.dart`) nennt nur
+  **neutrale/amtliche** Anlaufstellen (Rechtsanwaltskammer, Amtsgericht,
+  Agentur für Arbeit, Krankenkasse, Betriebsrat/Gewerkschaft). Es enthält
+  keine Partner-Links, keine `http`-URLs, kein Lead-Formular. Ein Test
+  (`help_resources_test.dart`) schlägt fehl, sobald ein Eintrag „http"
+  enthält.
+- **A10.2 Allgemein statt fallbezogen (RDG/StBerG, wie A8):** Die Texte sind
+  abstrakte Rechtsinformation. Die Kontext-Sensitivität beschränkt sich auf
+  die **Reihenfolge/Hervorhebung**: Einträge, deren `highlightFlags` zu den
+  aktuellen M5-`RiskFlag`-Codes passen (z. B. `kv_luecke` →
+  Krankenversicherung, Sperrzeit-/ALG-Flags → Agentur für Arbeit), rücken
+  nach oben und bekommen ein dezentes Pin-Symbol. `rankedHelpResources`
+  entfernt oder ergänzt nie Einträge – Hilfe ist immer vollständig sichtbar.
+- **A10.3 Auditierbar:** Wie der Ratgeber trägt das Panel ein Stand-Datum
+  (`helpResourcesReviewedOn`) und je Eintrag optional Rechtsgrundlagen (§).
+  Der Detail-Screen zeigt den Disclaimer-Footer und den ausdrücklichen
+  Hinweis „ExitKompass verdient nichts an diesen Hinweisen".
+
 ## A6 – Sprach- und Historien-Migration (2026-07-05)
 
 Die Engine wurde ursprünglich mit deutschen Bezeichnern, Kommentaren und
