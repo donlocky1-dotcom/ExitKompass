@@ -14,6 +14,9 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
   (ASSUMPTIONS.md A9.6).
 - Ergebnis: Szenario-Vergleich der vier Optionen (4-Balken-Chart, bestes
   Szenario, Delta zur Baseline „Bleiben")
+- „Liquidität"-Tab (M7): „Reicht mein Geld bis zum neuen Job?" – Rücklagen +
+  Szenario-Einkommen − Ausgaben, Kontostand-Verlauf als Chart, Warnung wann
+  die Deckungslücke entsteht (ASSUMPTIONS.md A11)
 - „Passende Hilfe"-Panel (dezent, aufklappbar unter dem Vergleich):
   neutrale Anlaufstellen (Fachanwalt, Rechtsschutz, Beratungshilfe,
   Agentur für Arbeit, Krankenkasse, Betriebsrat) – **ohne** Tracking,
@@ -37,7 +40,7 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
 - State: Riverpod; Eingaben werden lokal via Drift (SQLite) gespeichert
   und beim Start wiederhergestellt (Szenario-Ergebnisse bleiben
   in-memory, Spec §6). Schema-Migrationen laufen automatisch
-  (aktuell v2: Spalte `kuendigungs_art`, Default `unbekannt`) und
+  (v2: `kuendigungs_art`; v3: `monthly_expenses_euro` + `savings_euro`) und
   erhalten bereits gespeicherte Profile.
 
 Noch offen (Woche 5–6): RevenueCat/Paywall, lokale Push-Erinnerungen

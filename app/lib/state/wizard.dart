@@ -54,6 +54,8 @@ class WizardData {
     this.settlementsEuro = 0,
     this.horizonMonths = 24,
     this.kuendigungsArt = KuendigungsArt.unbekannt,
+    this.monthlyExpensesEuro = 2500,
+    this.savingsEuro = 10000,
     DateTime? noticeDate,
   })  : entryDate = entryDate ?? _defaultEntry,
         regularEndDate = regularEndDate ?? _defaultExit,
@@ -86,6 +88,12 @@ class WizardData {
   /// Grounds for the dismissal (persisted; suggests the estimate strength).
   final KuendigungsArt kuendigungsArt;
 
+  /// Household living expenses per month, in whole euros (bridge planner).
+  final int monthlyExpensesEuro;
+
+  /// Savings available today, in whole euros (bridge planner starting point).
+  final int savingsEuro;
+
   /// Date the written termination / offer was received (drives the
   /// § 4 KSchG deadline in the timeline; not used by the engine).
   final DateTime noticeDate;
@@ -110,6 +118,8 @@ class WizardData {
     int? settlementsEuro,
     int? horizonMonths,
     KuendigungsArt? kuendigungsArt,
+    int? monthlyExpensesEuro,
+    int? savingsEuro,
     DateTime? noticeDate,
   }) {
     return WizardData(
@@ -133,6 +143,8 @@ class WizardData {
       settlementsEuro: settlementsEuro ?? this.settlementsEuro,
       horizonMonths: horizonMonths ?? this.horizonMonths,
       kuendigungsArt: kuendigungsArt ?? this.kuendigungsArt,
+      monthlyExpensesEuro: monthlyExpensesEuro ?? this.monthlyExpensesEuro,
+      savingsEuro: savingsEuro ?? this.savingsEuro,
       noticeDate: noticeDate ?? this.noticeDate,
     );
   }
@@ -192,6 +204,18 @@ class WizardData {
         strength: strength ?? kuendigungsArt.suggestedStrength,
         smallBusiness: smallBusiness,
       );
+
+  /// Projects the household's cash runway for the given [scenario] using the
+  /// persisted monthly expenses and savings (M7). Reuses an existing
+  /// [aggregate] result if provided (else computes one).
+  RunwayPlan runwayFor(ScenarioType scenario, {AggregateResult? aggregate}) {
+    final result = aggregate ?? compute();
+    return computeRunway(
+      monthlyNetCents: result.scenarios[scenario]!.monthlyNetCents,
+      startingSavingsCents: savingsEuro * 100,
+      monthlyExpensesCents: monthlyExpensesEuro * 100,
+    );
+  }
 }
 
 /// Holds the wizard inputs; screens read and mutate via this controller.

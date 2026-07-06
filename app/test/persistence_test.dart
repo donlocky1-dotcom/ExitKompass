@@ -43,6 +43,8 @@ void main() {
       settlementsEuro: 3000,
       horizonMonths: 36,
       kuendigungsArt: KuendigungsArt.betriebsbedingt,
+      monthlyExpensesEuro: 3200,
+      savingsEuro: 25000,
       noticeDate: DateTime(2026, 4, 15),
     );
 
@@ -69,6 +71,8 @@ void main() {
     expect(loaded.settlementsEuro, original.settlementsEuro);
     expect(loaded.horizonMonths, original.horizonMonths);
     expect(loaded.kuendigungsArt, original.kuendigungsArt);
+    expect(loaded.monthlyExpensesEuro, original.monthlyExpensesEuro);
+    expect(loaded.savingsEuro, original.savingsEuro);
     expect(loaded.noticeDate, original.noticeDate);
   });
 
@@ -86,33 +90,72 @@ void main() {
     expect(await repo.load(), isNull);
   });
 
-  test('migration v1→v2 re-adds the column and preserves existing data', () async {
-    final dir = await Directory.systemTemp.createTemp('exitkompass_mig');
+  test('migration from v1 re-adds all later columns and preserves data', () async {
+    final dir = await Directory.systemTemp.createTemp('exitkompass_mig1');
     final file = File('${dir.path}/db.sqlite');
     addTearDown(() => dir.delete(recursive: true));
 
-    // 1) Create a current (v2) database and save a row.
-    final v2 = AppDatabase(NativeDatabase(file));
-    await WizardRepository(v2).save(WizardData(
+    // 1) Create a current database and save a row.
+    final current = AppDatabase(NativeDatabase(file));
+    await WizardRepository(current).save(WizardData(
       grossMonthEuro: 6100,
       kuendigungsArt: KuendigungsArt.verhaltensbedingt,
+      monthlyExpensesEuro: 3300,
+      savingsEuro: 27000,
     ));
-    await v2.close();
+    await current.close();
 
-    // 2) Downgrade the file to look like schema v1: drop the v2 column and
-    //    reset the schema version (no migration runs while versions match).
+    // 2) Downgrade the file to look like schema v1: drop every column added
+    //    after v1 and reset the schema version.
     final raw = AppDatabase(NativeDatabase(file));
     await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN kuendigungs_art');
+    await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN monthly_expenses_euro');
+    await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN savings_euro');
     await raw.customStatement('PRAGMA user_version = 1');
     await raw.close();
 
-    // 3) Reopen with the current schema → onUpgrade(1→2) re-adds the column.
+    // 3) Reopen → onUpgrade(1→3) re-adds all columns with their defaults.
     final upgraded = AppDatabase(NativeDatabase(file));
     final loaded = await WizardRepository(upgraded).load();
     expect(loaded, isNotNull);
     expect(loaded!.grossMonthEuro, 6100, reason: 'existing data preserved');
-    expect(loaded.kuendigungsArt, KuendigungsArt.unbekannt,
-        reason: 're-added column defaults to 0');
+    expect(loaded.kuendigungsArt, KuendigungsArt.unbekannt);
+    expect(loaded.monthlyExpensesEuro, 2500, reason: 'v3 default');
+    expect(loaded.savingsEuro, 10000, reason: 'v3 default');
+    await upgraded.close();
+  });
+
+  test('migration v2→v3 adds the bridge columns and preserves data', () async {
+    final dir = await Directory.systemTemp.createTemp('exitkompass_mig2');
+    final file = File('${dir.path}/db.sqlite');
+    addTearDown(() => dir.delete(recursive: true));
+
+    // 1) Save with the current schema (v3).
+    final current = AppDatabase(NativeDatabase(file));
+    await WizardRepository(current).save(WizardData(
+      grossMonthEuro: 6200,
+      kuendigungsArt: KuendigungsArt.betriebsbedingt,
+      monthlyExpensesEuro: 4000,
+      savingsEuro: 50000,
+    ));
+    await current.close();
+
+    // 2) Downgrade to v2: drop only the v3 columns, keep kuendigungs_art.
+    final raw = AppDatabase(NativeDatabase(file));
+    await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN monthly_expenses_euro');
+    await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN savings_euro');
+    await raw.customStatement('PRAGMA user_version = 2');
+    await raw.close();
+
+    // 3) Reopen → onUpgrade(2→3) adds the bridge columns; other data stays.
+    final upgraded = AppDatabase(NativeDatabase(file));
+    final loaded = await WizardRepository(upgraded).load();
+    expect(loaded, isNotNull);
+    expect(loaded!.grossMonthEuro, 6200, reason: 'existing data preserved');
+    expect(loaded.kuendigungsArt, KuendigungsArt.betriebsbedingt,
+        reason: 'v2 column untouched');
+    expect(loaded.monthlyExpensesEuro, 2500, reason: 're-added v3 default');
+    expect(loaded.savingsEuro, 10000, reason: 're-added v3 default');
     await upgraded.close();
   });
 

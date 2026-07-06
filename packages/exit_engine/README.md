@@ -211,6 +211,25 @@ print(e.regelabfindungCents); // 1400000  (§ 1a-Referenz)
 print(e.cappedByKschG10);     // false
 ```
 
+## M7 – Liquiditäts-/Brückenplaner
+
+Projiziert aus dem monatlichen Netto-Cashflow eines Szenarios (M5), den
+monatlichen Ausgaben und den heutigen Rücklagen den Kontostand Monat für
+Monat und findet, wann – falls überhaupt – das Geld ausgeht. Reine
+Cashflow-Projektion ohne Zinsen/Inflation (ASSUMPTIONS A11).
+
+```dart
+final plan = computeRunway(
+  monthlyNetCents: scenario.monthlyNetCents, // aus M5
+  startingSavingsCents: 900000,  // 9.000 € Rücklagen
+  monthlyExpensesCents: 340000,  // 3.400 €/Monat
+);
+print(plan.survivesHorizon);   // false → Lücke im Zeitraum
+print(plan.firstNegativeMonth); // 5   → ab Monat 5 negativ
+print(plan.monthsCovered);      // 5   → so viele Monate gedeckt
+print(plan.minBalanceCents);    // tiefster Stand (ggf. negativ)
+```
+
 ## Parameter aktualisieren
 
 `lib/params/params_2026.json` ist die Quelle der Wahrheit. Nach

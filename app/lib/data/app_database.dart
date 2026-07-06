@@ -34,6 +34,11 @@ class WizardStates extends Table {
   /// rows upgrade cleanly.
   IntColumn get kuendigungsArt => integer().withDefault(const Constant(0))();
 
+  /// Added in schema v3 (bridge planner). Whole euros; defaults keep existing
+  /// rows valid.
+  IntColumn get monthlyExpensesEuro => integer().withDefault(const Constant(2500))();
+  IntColumn get savingsEuro => integer().withDefault(const Constant(10000))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -44,13 +49,17 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'exitkompass'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.addColumn(wizardStates, wizardStates.kuendigungsArt);
+          }
+          if (from < 3) {
+            await m.addColumn(wizardStates, wizardStates.monthlyExpensesEuro);
+            await m.addColumn(wizardStates, wizardStates.savingsEuro);
           }
         },
       );

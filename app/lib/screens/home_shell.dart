@@ -8,6 +8,7 @@ import '../state/wizard.dart';
 import '../timeline/timeline.dart';
 import '../widgets/disclaimer_footer.dart';
 import 'comparison_tab.dart';
+import 'liquidity_tab.dart';
 import 'ratgeber_screen.dart';
 import 'settings_screen.dart';
 import 'timeline_screen.dart';
@@ -24,7 +25,7 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
 
-  static const _titles = ['Szenario-Vergleich', 'Fristen', 'Ratgeber'];
+  static const _titles = ['Szenario-Vergleich', 'Liquidität', 'Fristen', 'Ratgeber'];
 
   Future<void> _sharePdf() async {
     final data = ref.read(wizardProvider);
@@ -63,7 +64,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           Expanded(
             child: IndexedStack(
               index: _index,
-              children: const [ComparisonTab(), TimelineTab(), RatgeberTab()],
+              children: const [
+                ComparisonTab(),
+                LiquidityTab(),
+                TimelineTab(),
+                RatgeberTab(),
+              ],
             ),
           ),
           const DisclaimerFooter(),
@@ -74,6 +80,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Vergleich'),
+          NavigationDestination(
+              icon: Icon(Icons.account_balance_wallet_outlined), label: 'Liquidität'),
           NavigationDestination(icon: Icon(Icons.event), label: 'Fristen'),
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'Ratgeber'),
         ],
