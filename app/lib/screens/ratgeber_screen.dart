@@ -3,11 +3,18 @@ import 'package:flutter/material.dart';
 import '../content/models.dart';
 import '../content/ratgeber_content.dart';
 import '../widgets/disclaimer_footer.dart';
+import '../widgets/help_panel.dart';
 
 /// Ratgeber tab: articles grouped by category (spec §2.1 knowledge
 /// snippets). General legal information only.
 class RatgeberTab extends StatelessWidget {
-  const RatgeberTab({super.key});
+  const RatgeberTab({this.showHelpPanel = false, super.key});
+
+  /// When true, the neutral "Passende Hilfe" panel is appended. Used on the
+  /// standalone [RatgeberScreen] (the info-only entry), where no scenario
+  /// comparison exists to carry the panel. In the post-wizard HomeShell the
+  /// panel lives in the comparison tab, so this stays false there.
+  final bool showHelpPanel;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +40,11 @@ class RatgeberTab extends StatelessWidget {
               ),
             ),
         ],
+        if (showHelpPanel) ...[
+          const SizedBox(height: 8),
+          // No computed scenarios in the info-only path → neutral order.
+          const HelpPanel(flagCodes: {}),
+        ],
         const SizedBox(height: 8),
         Text(
           'Stand: $contentReviewedOn. Allgemeine Informationen, keine Rechtsberatung '
@@ -54,7 +66,10 @@ class RatgeberScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Ratgeber')),
       body: const Column(
-        children: [Expanded(child: RatgeberTab()), DisclaimerFooter()],
+        children: [
+          Expanded(child: RatgeberTab(showHelpPanel: true)),
+          DisclaimerFooter(),
+        ],
       ),
     );
   }

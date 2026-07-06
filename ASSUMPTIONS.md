@@ -309,6 +309,13 @@ setzt das **absichtlich anders** um (Privacy-USP, Einmalkauf-Modell, Spec §8):
   hinwenden") in derselben `rankedHelpResources`-Reihenfolge, sodass das
   teilbare Entscheidungs-Dossier ohne die App auskommt. Auch dort keine
   Links/Werbung, Stand-Datum und der „verdient nichts"-Hinweis inklusive.
+- **A10.5 Auch im Info-only-Pfad:** Wer im Onboarding „Nur informieren – zum
+  Ratgeber" wählt, durchläuft nie den Rechner und sähe das Panel sonst nicht.
+  Deshalb blendet die standalone `RatgeberScreen` es ein
+  (`RatgeberTab(showHelpPanel: true)`, ohne Flags → neutrale Reihenfolge). Im
+  Post-Wizard-`HomeShell` bleibt der Ratgeber-Tab bewusst ohne Panel (es lebt
+  dort im Vergleichs-Tab), um Doppelung zu vermeiden – ein Widget-Test sichert
+  beide Fälle.
 
 ## A6 – Sprach- und Historien-Migration (2026-07-05)
 
