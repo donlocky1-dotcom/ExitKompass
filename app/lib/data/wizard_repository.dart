@@ -37,6 +37,7 @@ class WizardRepository {
       paidRelease: row.paidRelease,
       settlementsEuro: row.settlementsEuro,
       horizonMonths: row.horizonMonths,
+      kuendigungsArt: KuendigungsArt.values[row.kuendigungsArt],
       noticeDate: row.noticeDate,
     );
   }
@@ -64,6 +65,7 @@ class WizardRepository {
             paidRelease: d.paidRelease,
             settlementsEuro: d.settlementsEuro,
             horizonMonths: d.horizonMonths,
+            kuendigungsArt: Value(d.kuendigungsArt.index),
             noticeDate: d.noticeDate,
           ),
         );

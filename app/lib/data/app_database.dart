@@ -30,6 +30,10 @@ class WizardStates extends Table {
   IntColumn get horizonMonths => integer()();
   DateTimeColumn get noticeDate => dateTime()();
 
+  /// Added in schema v2. Default 0 = KuendigungsArt.unbekannt so existing
+  /// rows upgrade cleanly.
+  IntColumn get kuendigungsArt => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -40,5 +44,14 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'exitkompass'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(wizardStates, wizardStates.kuendigungsArt);
+          }
+        },
+      );
 }

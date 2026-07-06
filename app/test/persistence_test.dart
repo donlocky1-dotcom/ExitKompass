@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/native.dart';
 import 'package:exit_engine/exit_engine.dart';
 import 'package:exitkompass_app/data/app_database.dart';
@@ -40,6 +42,7 @@ void main() {
       paidRelease: true,
       settlementsEuro: 3000,
       horizonMonths: 36,
+      kuendigungsArt: KuendigungsArt.betriebsbedingt,
       noticeDate: DateTime(2026, 4, 15),
     );
 
@@ -65,6 +68,7 @@ void main() {
     expect(loaded.paidRelease, original.paidRelease);
     expect(loaded.settlementsEuro, original.settlementsEuro);
     expect(loaded.horizonMonths, original.horizonMonths);
+    expect(loaded.kuendigungsArt, original.kuendigungsArt);
     expect(loaded.noticeDate, original.noticeDate);
   });
 
@@ -80,6 +84,36 @@ void main() {
     await repo.save(WizardData(grossMonthEuro: 5000));
     await repo.clear();
     expect(await repo.load(), isNull);
+  });
+
+  test('migration v1→v2 re-adds the column and preserves existing data', () async {
+    final dir = await Directory.systemTemp.createTemp('exitkompass_mig');
+    final file = File('${dir.path}/db.sqlite');
+    addTearDown(() => dir.delete(recursive: true));
+
+    // 1) Create a current (v2) database and save a row.
+    final v2 = AppDatabase(NativeDatabase(file));
+    await WizardRepository(v2).save(WizardData(
+      grossMonthEuro: 6100,
+      kuendigungsArt: KuendigungsArt.verhaltensbedingt,
+    ));
+    await v2.close();
+
+    // 2) Downgrade the file to look like schema v1: drop the v2 column and
+    //    reset the schema version (no migration runs while versions match).
+    final raw = AppDatabase(NativeDatabase(file));
+    await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN kuendigungs_art');
+    await raw.customStatement('PRAGMA user_version = 1');
+    await raw.close();
+
+    // 3) Reopen with the current schema → onUpgrade(1→2) re-adds the column.
+    final upgraded = AppDatabase(NativeDatabase(file));
+    final loaded = await WizardRepository(upgraded).load();
+    expect(loaded, isNotNull);
+    expect(loaded!.grossMonthEuro, 6100, reason: 'existing data preserved');
+    expect(loaded.kuendigungsArt, KuendigungsArt.unbekannt,
+        reason: 're-added column defaults to 0');
+    await upgraded.close();
   });
 
   test('a controller with a repository persists updates', () async {

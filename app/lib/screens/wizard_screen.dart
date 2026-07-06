@@ -97,20 +97,36 @@ class _SituationStep extends ConsumerWidget {
       Situation.ueberlegeZuKuendigen: 'Ich überlege selbst zu kündigen',
       Situation.nurInfo: 'Ich möchte mich nur informieren',
     };
-    return RadioGroup<Situation>(
-      groupValue: data.situation,
-      onChanged: (v) =>
-          ref.read(wizardProvider.notifier).update((d) => d.copyWith(situation: v)),
-      child: Column(
-        children: [
-          for (final entry in options.entries)
-            RadioListTile<Situation>(
-              contentPadding: EdgeInsets.zero,
-              value: entry.key,
-              title: Text(entry.value),
-            ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RadioGroup<Situation>(
+          groupValue: data.situation,
+          onChanged: (v) =>
+              ref.read(wizardProvider.notifier).update((d) => d.copyWith(situation: v)),
+          child: Column(
+            children: [
+              for (final entry in options.entries)
+                RadioListTile<Situation>(
+                  contentPadding: EdgeInsets.zero,
+                  value: entry.key,
+                  title: Text(entry.value),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<KuendigungsArt>(
+          initialValue: data.kuendigungsArt,
+          decoration: const InputDecoration(labelText: 'Kündigungsgrund (falls bekannt)'),
+          items: [
+            for (final k in KuendigungsArt.values)
+              DropdownMenuItem(value: k, child: Text(k.label)),
+          ],
+          onChanged: (v) =>
+              ref.read(wizardProvider.notifier).update((d) => d.copyWith(kuendigungsArt: v)),
+        ),
+      ],
     );
   }
 }
@@ -285,7 +301,8 @@ class _SeveranceEstimator extends ConsumerStatefulWidget {
 }
 
 class _SeveranceEstimatorState extends ConsumerState<_SeveranceEstimator> {
-  NegotiationStrength _strength = NegotiationStrength.standard;
+  late NegotiationStrength _strength =
+      ref.read(wizardProvider).kuendigungsArt.suggestedStrength;
   bool _smallBusiness = false;
 
   @override

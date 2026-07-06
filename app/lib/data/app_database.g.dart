@@ -235,6 +235,18 @@ class $WizardStatesTable extends WizardStates
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _kuendigungsArtMeta = const VerificationMeta(
+    'kuendigungsArt',
+  );
+  @override
+  late final GeneratedColumn<int> kuendigungsArt = GeneratedColumn<int>(
+    'kuendigungs_art',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -257,6 +269,7 @@ class $WizardStatesTable extends WizardStates
     settlementsEuro,
     horizonMonths,
     noticeDate,
+    kuendigungsArt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -461,6 +474,15 @@ class $WizardStatesTable extends WizardStates
     } else if (isInserting) {
       context.missing(_noticeDateMeta);
     }
+    if (data.containsKey('kuendigungs_art')) {
+      context.handle(
+        _kuendigungsArtMeta,
+        kuendigungsArt.isAcceptableOrUnknown(
+          data['kuendigungs_art']!,
+          _kuendigungsArtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -550,6 +572,10 @@ class $WizardStatesTable extends WizardStates
         DriftSqlType.dateTime,
         data['${effectivePrefix}notice_date'],
       )!,
+      kuendigungsArt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}kuendigungs_art'],
+      )!,
     );
   }
 
@@ -581,6 +607,10 @@ class WizardState extends DataClass implements Insertable<WizardState> {
   final int settlementsEuro;
   final int horizonMonths;
   final DateTime noticeDate;
+
+  /// Added in schema v2. Default 0 = KuendigungsArt.unbekannt so existing
+  /// rows upgrade cleanly.
+  final int kuendigungsArt;
   const WizardState({
     required this.id,
     required this.situation,
@@ -602,6 +632,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     required this.settlementsEuro,
     required this.horizonMonths,
     required this.noticeDate,
+    required this.kuendigungsArt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -628,6 +659,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     map['settlements_euro'] = Variable<int>(settlementsEuro);
     map['horizon_months'] = Variable<int>(horizonMonths);
     map['notice_date'] = Variable<DateTime>(noticeDate);
+    map['kuendigungs_art'] = Variable<int>(kuendigungsArt);
     return map;
   }
 
@@ -653,6 +685,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
       settlementsEuro: Value(settlementsEuro),
       horizonMonths: Value(horizonMonths),
       noticeDate: Value(noticeDate),
+      kuendigungsArt: Value(kuendigungsArt),
     );
   }
 
@@ -686,6 +719,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
       settlementsEuro: serializer.fromJson<int>(json['settlementsEuro']),
       horizonMonths: serializer.fromJson<int>(json['horizonMonths']),
       noticeDate: serializer.fromJson<DateTime>(json['noticeDate']),
+      kuendigungsArt: serializer.fromJson<int>(json['kuendigungsArt']),
     );
   }
   @override
@@ -714,6 +748,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
       'settlementsEuro': serializer.toJson<int>(settlementsEuro),
       'horizonMonths': serializer.toJson<int>(horizonMonths),
       'noticeDate': serializer.toJson<DateTime>(noticeDate),
+      'kuendigungsArt': serializer.toJson<int>(kuendigungsArt),
     };
   }
 
@@ -738,6 +773,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     int? settlementsEuro,
     int? horizonMonths,
     DateTime? noticeDate,
+    int? kuendigungsArt,
   }) => WizardState(
     id: id ?? this.id,
     situation: situation ?? this.situation,
@@ -760,6 +796,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     settlementsEuro: settlementsEuro ?? this.settlementsEuro,
     horizonMonths: horizonMonths ?? this.horizonMonths,
     noticeDate: noticeDate ?? this.noticeDate,
+    kuendigungsArt: kuendigungsArt ?? this.kuendigungsArt,
   );
   WizardState copyWithCompanion(WizardStatesCompanion data) {
     return WizardState(
@@ -809,6 +846,9 @@ class WizardState extends DataClass implements Insertable<WizardState> {
       noticeDate: data.noticeDate.present
           ? data.noticeDate.value
           : this.noticeDate,
+      kuendigungsArt: data.kuendigungsArt.present
+          ? data.kuendigungsArt.value
+          : this.kuendigungsArt,
     );
   }
 
@@ -834,13 +874,14 @@ class WizardState extends DataClass implements Insertable<WizardState> {
           ..write('paidRelease: $paidRelease, ')
           ..write('settlementsEuro: $settlementsEuro, ')
           ..write('horizonMonths: $horizonMonths, ')
-          ..write('noticeDate: $noticeDate')
+          ..write('noticeDate: $noticeDate, ')
+          ..write('kuendigungsArt: $kuendigungsArt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     situation,
     birthYear,
@@ -861,7 +902,8 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     settlementsEuro,
     horizonMonths,
     noticeDate,
-  );
+    kuendigungsArt,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -886,7 +928,8 @@ class WizardState extends DataClass implements Insertable<WizardState> {
           other.paidRelease == this.paidRelease &&
           other.settlementsEuro == this.settlementsEuro &&
           other.horizonMonths == this.horizonMonths &&
-          other.noticeDate == this.noticeDate);
+          other.noticeDate == this.noticeDate &&
+          other.kuendigungsArt == this.kuendigungsArt);
 }
 
 class WizardStatesCompanion extends UpdateCompanion<WizardState> {
@@ -910,6 +953,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
   final Value<int> settlementsEuro;
   final Value<int> horizonMonths;
   final Value<DateTime> noticeDate;
+  final Value<int> kuendigungsArt;
   const WizardStatesCompanion({
     this.id = const Value.absent(),
     this.situation = const Value.absent(),
@@ -931,6 +975,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     this.settlementsEuro = const Value.absent(),
     this.horizonMonths = const Value.absent(),
     this.noticeDate = const Value.absent(),
+    this.kuendigungsArt = const Value.absent(),
   });
   WizardStatesCompanion.insert({
     this.id = const Value.absent(),
@@ -953,6 +998,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     required int settlementsEuro,
     required int horizonMonths,
     required DateTime noticeDate,
+    this.kuendigungsArt = const Value.absent(),
   }) : situation = Value(situation),
        birthYear = Value(birthYear),
        taxClass = Value(taxClass),
@@ -993,6 +1039,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     Expression<int>? settlementsEuro,
     Expression<int>? horizonMonths,
     Expression<DateTime>? noticeDate,
+    Expression<int>? kuendigungsArt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1018,6 +1065,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
       if (settlementsEuro != null) 'settlements_euro': settlementsEuro,
       if (horizonMonths != null) 'horizon_months': horizonMonths,
       if (noticeDate != null) 'notice_date': noticeDate,
+      if (kuendigungsArt != null) 'kuendigungs_art': kuendigungsArt,
     });
   }
 
@@ -1042,6 +1090,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     Value<int>? settlementsEuro,
     Value<int>? horizonMonths,
     Value<DateTime>? noticeDate,
+    Value<int>? kuendigungsArt,
   }) {
     return WizardStatesCompanion(
       id: id ?? this.id,
@@ -1065,6 +1114,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
       settlementsEuro: settlementsEuro ?? this.settlementsEuro,
       horizonMonths: horizonMonths ?? this.horizonMonths,
       noticeDate: noticeDate ?? this.noticeDate,
+      kuendigungsArt: kuendigungsArt ?? this.kuendigungsArt,
     );
   }
 
@@ -1135,6 +1185,9 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     if (noticeDate.present) {
       map['notice_date'] = Variable<DateTime>(noticeDate.value);
     }
+    if (kuendigungsArt.present) {
+      map['kuendigungs_art'] = Variable<int>(kuendigungsArt.value);
+    }
     return map;
   }
 
@@ -1160,7 +1213,8 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
           ..write('paidRelease: $paidRelease, ')
           ..write('settlementsEuro: $settlementsEuro, ')
           ..write('horizonMonths: $horizonMonths, ')
-          ..write('noticeDate: $noticeDate')
+          ..write('noticeDate: $noticeDate, ')
+          ..write('kuendigungsArt: $kuendigungsArt')
           ..write(')'))
         .toString();
   }
@@ -1199,6 +1253,7 @@ typedef $$WizardStatesTableCreateCompanionBuilder =
       required int settlementsEuro,
       required int horizonMonths,
       required DateTime noticeDate,
+      Value<int> kuendigungsArt,
     });
 typedef $$WizardStatesTableUpdateCompanionBuilder =
     WizardStatesCompanion Function({
@@ -1222,6 +1277,7 @@ typedef $$WizardStatesTableUpdateCompanionBuilder =
       Value<int> settlementsEuro,
       Value<int> horizonMonths,
       Value<DateTime> noticeDate,
+      Value<int> kuendigungsArt,
     });
 
 class $$WizardStatesTableFilterComposer
@@ -1330,6 +1386,11 @@ class $$WizardStatesTableFilterComposer
 
   ColumnFilters<DateTime> get noticeDate => $composableBuilder(
     column: $table.noticeDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get kuendigungsArt => $composableBuilder(
+    column: $table.kuendigungsArt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1442,6 +1503,11 @@ class $$WizardStatesTableOrderingComposer
     column: $table.noticeDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get kuendigungsArt => $composableBuilder(
+    column: $table.kuendigungsArt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WizardStatesTableAnnotationComposer
@@ -1538,6 +1604,11 @@ class $$WizardStatesTableAnnotationComposer
     column: $table.noticeDate,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get kuendigungsArt => $composableBuilder(
+    column: $table.kuendigungsArt,
+    builder: (column) => column,
+  );
 }
 
 class $$WizardStatesTableTableManager
@@ -1592,6 +1663,7 @@ class $$WizardStatesTableTableManager
                 Value<int> settlementsEuro = const Value.absent(),
                 Value<int> horizonMonths = const Value.absent(),
                 Value<DateTime> noticeDate = const Value.absent(),
+                Value<int> kuendigungsArt = const Value.absent(),
               }) => WizardStatesCompanion(
                 id: id,
                 situation: situation,
@@ -1613,6 +1685,7 @@ class $$WizardStatesTableTableManager
                 settlementsEuro: settlementsEuro,
                 horizonMonths: horizonMonths,
                 noticeDate: noticeDate,
+                kuendigungsArt: kuendigungsArt,
               ),
           createCompanionCallback:
               ({
@@ -1636,6 +1709,7 @@ class $$WizardStatesTableTableManager
                 required int settlementsEuro,
                 required int horizonMonths,
                 required DateTime noticeDate,
+                Value<int> kuendigungsArt = const Value.absent(),
               }) => WizardStatesCompanion.insert(
                 id: id,
                 situation: situation,
@@ -1657,6 +1731,7 @@ class $$WizardStatesTableTableManager
                 settlementsEuro: settlementsEuro,
                 horizonMonths: horizonMonths,
                 noticeDate: noticeDate,
+                kuendigungsArt: kuendigungsArt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

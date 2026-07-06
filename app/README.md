@@ -8,7 +8,10 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
 - Onboarding mit Pflicht-Disclaimer (§ 9)
 - 4-Schritt-Wizard: Situation · Person & Steuer · Job · Angebot
 - Abfindungshöhe-Schätzer (M6): Bandbreite je Verhandlungsposition
-  (§ 1a/§ 10 KSchG), Mittelwert per Klick übernehmen
+  (§ 1a/§ 10 KSchG), Mittelwert per Klick übernehmen. Der im Wizard
+  erfasste Kündigungsgrund (betriebs-/verhaltens-/personenbedingt)
+  wird gespeichert und schlägt die Start-Verhandlungsstärke vor
+  (ASSUMPTIONS.md A9.6).
 - Ergebnis: Szenario-Vergleich der vier Optionen (4-Balken-Chart, bestes
   Szenario, Delta zur Baseline „Bleiben")
 - Detail je Szenario: monatlicher Netto-Cashflow (fl_chart) + Risiko-/
@@ -26,7 +29,9 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
   „Daten löschen" mit Bestätigung
 - State: Riverpod; Eingaben werden lokal via Drift (SQLite) gespeichert
   und beim Start wiederhergestellt (Szenario-Ergebnisse bleiben
-  in-memory, Spec §6).
+  in-memory, Spec §6). Schema-Migrationen laufen automatisch
+  (aktuell v2: Spalte `kuendigungs_art`, Default `unbekannt`) und
+  erhalten bereits gespeicherte Profile.
 
 Noch offen (Woche 5–6): RevenueCat/Paywall, lokale Push-Erinnerungen
 für die Fristen.

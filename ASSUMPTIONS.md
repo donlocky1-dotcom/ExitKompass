@@ -221,8 +221,23 @@ einer Höhen-Schätzung). Bewusst als **Orientierung, kein Rechtsanspruch**:
   und Klageverzicht – **nicht** ein allgemeines gesetzliches Minimum (anders
   als bei Wettbewerber 2 dargestellt).
 - **A9.5 Verwendung:** Der Mittelwert der Bandbreite kann per Button die
-  Abfindungs-Eingabe vorbefüllen; die Verhandlungsstärke selbst ist
-  transienter UI-Zustand (nicht persistiert, keine DB-Migration nötig).
+  Abfindungs-Eingabe vorbefüllen. Die gewählte Verhandlungsstärke selbst
+  bleibt transienter UI-Zustand des Schätzers; ihr **Startwert** wird aber
+  aus dem persistierten Kündigungsgrund abgeleitet (A9.6).
+- **A9.6 Kündigungsgrund (`KuendigungsArt`) als persistierte Eingabe:** Der
+  Grund der Kündigung (unbekannt · betriebsbedingt · verhaltensbedingt ·
+  personenbedingt) wird im Wizard erfasst und in der Drift/SQLite-Datenbank
+  mitgespeichert. Er schlägt eine sinnvolle Start-Verhandlungsstärke vor
+  (`suggestedStrength`: betriebs-/personenbedingt → standard, verhaltens­-
+  bedingt → schwach). Die Zuordnung ist eine Heuristik, kein Rechtsurteil –
+  bei verhaltensbedingter Kündigung *kann* die Position dennoch stark sein
+  (z. B. bei formell fehlerhafter Abmahnung); der Nutzer kann die Stärke
+  jederzeit übersteuern. Das neue Feld erforderte eine **Schema-Migration
+  v1 → v2** (`app_database.dart`): `onUpgrade` fügt die Spalte
+  `kuendigungs_art` mit Default 0 (= `unbekannt`) hinzu, sodass bereits
+  gespeicherte Profile ohne Datenverlust weiterlaufen. Ein
+  `persistence_test`-Fall spielt den Downgrade → Upgrade durch und sichert
+  Datenerhalt und Default zu.
 
 ## A8 – Ratgeber & Fristen (Content, RDG/StBerG-Leitlinie)
 

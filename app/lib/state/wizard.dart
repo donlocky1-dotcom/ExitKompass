@@ -7,6 +7,29 @@ import '../data/wizard_repository.dart';
 /// scenario is emphasised; the engine always computes all four.
 enum Situation { kuendigungErhalten, aufhebungAngeboten, ueberlegeZuKuendigen, nurInfo }
 
+/// Grounds for the dismissal. Informs the suggested negotiation strength
+/// of the severance estimate (M6).
+enum KuendigungsArt { unbekannt, betriebsbedingt, verhaltensbedingt, personenbedingt }
+
+extension KuendigungsArtSuggestion on KuendigungsArt {
+  /// A sensible default negotiation strength for this ground.
+  NegotiationStrength get suggestedStrength => switch (this) {
+        // Operational dismissals are the classic § 1a / severance case.
+        KuendigungsArt.betriebsbedingt => NegotiationStrength.standard,
+        // Behaviour-based dismissals: if the grounds hold, the position is weaker.
+        KuendigungsArt.verhaltensbedingt => NegotiationStrength.schwach,
+        KuendigungsArt.personenbedingt => NegotiationStrength.standard,
+        KuendigungsArt.unbekannt => NegotiationStrength.standard,
+      };
+
+  String get label => switch (this) {
+        KuendigungsArt.unbekannt => 'Unklar / sonstige',
+        KuendigungsArt.betriebsbedingt => 'Betriebsbedingt',
+        KuendigungsArt.verhaltensbedingt => 'Verhaltensbedingt',
+        KuendigungsArt.personenbedingt => 'Personenbedingt',
+      };
+}
+
 /// All wizard inputs. Euro fields are whole euros (converted to cents when
 /// the engine is called); defaults make the result screen computable
 /// immediately.
@@ -30,6 +53,7 @@ class WizardData {
     this.paidRelease = false,
     this.settlementsEuro = 0,
     this.horizonMonths = 24,
+    this.kuendigungsArt = KuendigungsArt.unbekannt,
     DateTime? noticeDate,
   })  : entryDate = entryDate ?? _defaultEntry,
         regularEndDate = regularEndDate ?? _defaultExit,
@@ -59,6 +83,9 @@ class WizardData {
   final int settlementsEuro;
   final int horizonMonths;
 
+  /// Grounds for the dismissal (persisted; suggests the estimate strength).
+  final KuendigungsArt kuendigungsArt;
+
   /// Date the written termination / offer was received (drives the
   /// § 4 KSchG deadline in the timeline; not used by the engine).
   final DateTime noticeDate;
@@ -82,6 +109,7 @@ class WizardData {
     bool? paidRelease,
     int? settlementsEuro,
     int? horizonMonths,
+    KuendigungsArt? kuendigungsArt,
     DateTime? noticeDate,
   }) {
     return WizardData(
@@ -104,6 +132,7 @@ class WizardData {
       paidRelease: paidRelease ?? this.paidRelease,
       settlementsEuro: settlementsEuro ?? this.settlementsEuro,
       horizonMonths: horizonMonths ?? this.horizonMonths,
+      kuendigungsArt: kuendigungsArt ?? this.kuendigungsArt,
       noticeDate: noticeDate ?? this.noticeDate,
     );
   }
