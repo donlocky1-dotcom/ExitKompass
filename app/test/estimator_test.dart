@@ -13,7 +13,7 @@ Future<void> _openWizard(WidgetTester tester) async {
   await tester.pumpWidget(const ProviderScope(child: ExitKompassApp()));
   await tester.tap(find.byType(Checkbox));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Szenarien berechnen'));
+  await tester.tap(find.text('Direkt zum Netto-Szenario-Vergleich'));
   await tester.pumpAndSettle();
   // Jump to the offer step (step index 3).
   await tester.tap(find.text('Angebot'));

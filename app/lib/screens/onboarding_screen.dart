@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'quick_estimate_screen.dart';
 import 'ratgeber_screen.dart';
 import 'wizard_screen.dart';
 
@@ -68,11 +69,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               FilledButton(
                 onPressed: _accepted
                     ? () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(builder: (_) => const WizardScreen()),
+                          MaterialPageRoute<void>(builder: (_) => const QuickEstimateScreen()),
                         )
                     : null,
                 style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-                child: const Text('Szenarien berechnen'),
+                child: const Text('Abfindung schätzen'),
+              ),
+              TextButton(
+                onPressed: _accepted
+                    ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(builder: (_) => const WizardScreen()),
+                        )
+                    : null,
+                child: const Text('Direkt zum Netto-Szenario-Vergleich'),
               ),
               TextButton(
                 onPressed: _accepted

@@ -23,7 +23,7 @@ void main() {
     final enabled = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(enabled.onPressed, isNotNull);
 
-    await tester.tap(find.text('Szenarien berechnen'));
+    await tester.tap(find.text('Direkt zum Netto-Szenario-Vergleich'));
     await tester.pumpAndSettle();
 
     expect(find.byType(WizardScreen), findsOneWidget);
@@ -35,7 +35,7 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: ExitKompassApp()));
     await tester.tap(find.byType(Checkbox));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Szenarien berechnen'));
+    await tester.tap(find.text('Direkt zum Netto-Szenario-Vergleich'));
     await tester.pumpAndSettle();
 
     // Advance through the four steps with the default inputs. The
