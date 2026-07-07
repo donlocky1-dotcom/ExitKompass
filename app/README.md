@@ -28,7 +28,8 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
   (§ 4 KSchG, § 38/§ 141 SGB III, KV, Zeugnis)
 - „Ratgeber"-Tab: belegte, datierte Wissens-Artikel (Verhandlung,
   Rechtsgrundlagen, Arbeitsagentur) – allgemeine Rechtsinfo, keine
-  Einzelfallberatung (siehe ASSUMPTIONS.md A8)
+  Einzelfallberatung (siehe ASSUMPTIONS.md A8). Werkzeug **Zeugnis-Decoder**:
+  übersetzt Zeugnissprache in Klartext/Schulnote (§ 109 GewO, ASSUMPTIONS A13)
 - PDF-Dossier: „Entscheidungs-Dossier" (Eingaben, Szenario-Vergleich,
   Hinweise, Verhandlungs-Bandbreite, Fristen, „Passende Hilfe", Disclaimer)
   via Teilen-Button; eingebettete DejaVu-Schrift für korrekte

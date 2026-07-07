@@ -358,6 +358,21 @@ Abfindung bei Auszahlung dieses vs. nächstes Jahr.
   Reine Orientierung, ausdrücklich „keine Steuerberatung". Die tatsächliche
   Gestaltung (z. B. Auszahlung Januar statt Dezember) hängt vom Einzelfall ab.
 
+## A13 – Zeugnis-Decoder (Content)
+
+Werkzeug im Ratgeber: übersetzt die Code-Sprache von Arbeitszeugnissen in
+Klartext/Schulnoten.
+
+- **A13.1 Konventionen, kein Gesetz:** Die Noten-Skala („…zu unserer …
+  Zufriedenheit") und die Geheimcodes sind **etablierte Rechtsprechungs-/
+  Formulierungskonventionen**, kein Gesetzestext. § 109 GewO (Anspruch auf ein
+  wahres und wohlwollendes qualifiziertes Zeugnis) wird als Rechtsgrundlage
+  genannt. Wie bei A8 nur **allgemeine Information**, keine Bewertung des
+  konkreten Zeugnisses; Grenzfälle → Fachanwalt.
+- **A13.2 Auditierbar:** Stand-Datum `zeugnisReviewedOn`; ein Content-Test
+  erzwingt Text/Bedeutung je Eintrag, Noten im Bereich 1–6 und die
+  Vollständigkeit der sechs Leistungsstufen.
+
 ## A6 – Sprach- und Historien-Migration (2026-07-05)
 
 Die Engine wurde ursprünglich mit deutschen Bezeichnern, Kommentaren und

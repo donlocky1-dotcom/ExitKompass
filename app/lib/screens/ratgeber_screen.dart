@@ -4,6 +4,7 @@ import '../content/models.dart';
 import '../content/ratgeber_content.dart';
 import '../widgets/disclaimer_footer.dart';
 import '../widgets/help_panel.dart';
+import 'zeugnis_decoder_screen.dart';
 
 /// Ratgeber tab: articles grouped by category (spec §2.1 knowledge
 /// snippets). General legal information only.
@@ -22,6 +23,22 @@ class RatgeberTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text('Werkzeuge', style: theme.textTheme.titleMedium),
+        ),
+        Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            leading: const Icon(Icons.translate),
+            title: const Text('Zeugnis-Decoder'),
+            subtitle: const Text('Zeugnissprache in Klartext / Schulnote übersetzen'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const ZeugnisDecoderScreen()),
+            ),
+          ),
+        ),
         for (final category in ArticleCategory.values) ...[
           Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 8),
