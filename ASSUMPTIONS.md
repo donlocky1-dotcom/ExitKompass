@@ -509,4 +509,37 @@ Nach Praxis-Feedback wurde die Szenario-Logik (M5) präzisiert:
 - **A18.4 Anker & Monatsende:** Das Enddatum wird aus dem Kündigungszugang
   (`noticeDate`) plus N Monaten **zum Monatsende** berechnet (`noticeEndDate`).
 
+## A19 – Progressionsvorbehalt (§ 32b EStG) auf die Abfindung (2026-07-07)
+
+- **A19.1 Wirkung:** ALG 1 (und andere Lohnersatzleistungen) sind steuerfrei,
+  heben aber über den **besonderen Steuersatz** (§ 32b Abs. 2 EStG) den auf das
+  zvE – inkl. Abfindung – angewandten Durchschnittssatz. Modelliert als
+  `incomeTaxWithProgression` = `incomeTax(zvE + Prog.) / (zvE + Prog.) × zvE`.
+- **A19.2 Bezugsjahr:** In M5 wird pro Szenario das **im selben Kalenderjahr**
+  wie die Abfindungsauszahlung zufließende ALG als Progressionseinkommen
+  angesetzt (Monatsraster; der Abfindungsmonat selbst zählt nicht als ALG-Monat).
+- **A19.3 Näherung § 34:** Die genaue Verzahnung mit der Fünftelregelung
+  (§ 34) ist vereinfacht (derselbe Satz wird einheitlich im Vergleich
+  verwendet). Ergebnis ist eine **Schätzung**, keine Steuerberechnung.
+
+## A20 – Bürgergeld/SGB II mit Vermögensprüfung (2026-07-07, M11)
+
+- **A20.1 Bedarfsprüfung:** Nach dem ALG 1 wird Bürgergeld nur angesetzt, wenn
+  das **Vermögen bis auf den Freibetrag aufgebraucht** ist (§ 12 SGB II). M5
+  simuliert die Vermögensabschmelzung über den Horizont (Rücklagen − monatliche
+  Ausgaben + Einkommen) und lässt Bürgergeld erst greifen, wenn das Vermögen
+  ≤ Freibetrag fällt.
+- **A20.2 Karenzzeit:** Im **ersten Jahr des Bürgergeld-Bezugs** gilt der hohe
+  Karenzzeit-Freibetrag (rund **40.000 €** erste Person, + 15.000 € je weitere),
+  danach der Regelfall (**15.000 €** je Person) – § 12 Abs. 2/3 SGB II.
+- **A20.3 Höhe (grobe Schätzung):** Angesetzt wird der **Regelsatz** (single
+  563 €/Monat, § 20 SGB II, 2026; Nullrunde). Die **Kosten der Unterkunft (KdU,
+  Miete)** kämen obendrauf und sind ohne Mieteingabe **nicht** enthalten
+  (konservativ). `kduMonthlyCents` kann sie optional einrechnen.
+- **A20.4 Haushalt:** Default ist ein **Ein-Personen-Haushalt**; eine
+  Bedarfsgemeinschaft (Regelbedarfe je Kind, Kindergeld-Anrechnung) wird nicht
+  modelliert. Reine **Schätzung**, keine Sozialleistungsberechnung.
+- **A20.5 Rücklagen = Vermögen:** Das im Liquiditätsplaner erfasste Feld
+  „Rücklagen" (`savingsEuro`) dient zugleich als Vermögen der Bedarfsprüfung.
+
 _(wird fortlaufend gepflegt)_

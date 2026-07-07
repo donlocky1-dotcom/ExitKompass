@@ -322,4 +322,25 @@ void main() {
       expect(incomeTax(taxableIncomeCents: eur(115000)), eur(37164));
     });
   });
+
+  group('incomeTaxWithProgression (§ 32b special rate)', () {
+    test('no progression income equals the plain tariff', () {
+      expect(
+        incomeTaxWithProgression(taxableIncomeCents: eur(40000)),
+        incomeTax(taxableIncomeCents: eur(40000)),
+      );
+    });
+
+    test('progression income raises the tax on the same taxable income', () {
+      final plain = incomeTax(taxableIncomeCents: eur(40000));
+      final withProg = incomeTaxWithProgression(
+        taxableIncomeCents: eur(40000),
+        progressionIncomeCents: eur(15000),
+      );
+      expect(withProg, greaterThan(plain));
+      // Average rate on 55,000 applied to 40,000 stays below the tax that
+      // 55,000 of real taxable income would incur.
+      expect(withProg, lessThan(incomeTax(taxableIncomeCents: eur(55000))));
+    });
+  });
 }

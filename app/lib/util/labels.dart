@@ -64,5 +64,6 @@ String cashflowSourceLabel(CashflowSource s) => switch (s) {
       CashflowSource.severance => 'Abfindung',
       CashflowSource.severanceRefund => 'Steuererstattung',
       CashflowSource.alg => 'ALG 1',
+      CashflowSource.buergergeld => 'Bürgergeld',
       CashflowSource.gap => 'ohne Einkommen',
     };

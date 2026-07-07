@@ -189,6 +189,11 @@ class WizardData {
       ),
       referenceDate: DateTime(now.year, now.month, 1),
       horizonMonths: horizonMonths,
+      // After ALG 1, model the means-tested Bürgergeld floor from the
+      // household finances (savings spent down to the SGB II allowance).
+      includeBuergergeld: true,
+      startingAssetsCents: savingsEuro * 100,
+      monthlyExpensesCents: monthlyExpensesEuro * 100,
     );
   }
 

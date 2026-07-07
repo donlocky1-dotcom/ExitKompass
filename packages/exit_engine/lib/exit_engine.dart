@@ -26,6 +26,7 @@ export 'src/m7_bridge_plan.dart';
 export 'src/m8_severance_timing.dart';
 export 'src/m9_non_compete.dart';
 export 'src/m10_vacation.dart';
+export 'src/m11_buergergeld.dart';
 export 'src/money.dart';
 export 'src/notice_period.dart';
 export 'src/net_income.dart';

@@ -25,6 +25,7 @@ import 'dart:math';
 import 'm1_income_tax.dart';
 import 'm3_severance.dart';
 import 'm4_alg1.dart';
+import 'm11_buergergeld.dart';
 import 'net_income.dart';
 import 'params.dart';
 
@@ -47,7 +48,7 @@ enum ScenarioType {
 }
 
 /// Origin of a month's net cashflow (for the UI breakdown/chart).
-enum CashflowSource { salary, severance, severanceRefund, alg, gap }
+enum CashflowSource { salary, severance, severanceRefund, alg, buergergeld, gap }
 
 /// A single risk or information flag attached to a scenario. [message] is
 /// German UI copy (du-form, no recommendation language, per CLAUDE.md).
@@ -217,6 +218,10 @@ int _monthsBetween(DateTime from, DateTime to) =>
 ///
 /// [referenceDate] anchors month 0 of the horizon (typically "today").
 /// [horizonMonths] is the observation window (spec default 24).
+/// When [includeBuergergeld] is set (with household finances via
+/// [startingAssetsCents] / [monthlyExpensesCents]), a means-tested Bürgergeld
+/// floor is modelled for the exit scenarios once assets are spent down to the
+/// statutory allowance (M11).
 AggregateResult aggregateScenarios({
   required UserProfile profile,
   required EmploymentData employment,
@@ -224,6 +229,12 @@ AggregateResult aggregateScenarios({
   required DateTime referenceDate,
   int horizonMonths = 24,
   ExitParams? params,
+  bool includeBuergergeld = false,
+  int startingAssetsCents = 0,
+  int monthlyExpensesCents = 0,
+  int kduMonthlyCents = 0,
+  int householdSize = 1,
+  BuergergeldParams? buergergeld,
 }) {
   final p = params ?? ExitParams.year2026();
   final b = _ScenarioBuilder(
@@ -233,6 +244,12 @@ AggregateResult aggregateScenarios({
     referenceDate: referenceDate,
     horizon: horizonMonths,
     params: p,
+    includeBuergergeld: includeBuergergeld,
+    startingAssetsCents: startingAssetsCents,
+    monthlyExpensesCents: monthlyExpensesCents,
+    kduMonthlyCents: kduMonthlyCents,
+    householdSize: householdSize,
+    buergergeld: buergergeld ?? BuergergeldParams.year2026(),
   );
 
   return AggregateResult(
@@ -257,6 +274,12 @@ class _ScenarioBuilder {
     required this.referenceDate,
     required this.horizon,
     required this.params,
+    required this.includeBuergergeld,
+    required this.startingAssetsCents,
+    required this.monthlyExpensesCents,
+    required this.kduMonthlyCents,
+    required this.householdSize,
+    required this.buergergeld,
   }) {
     exitYear = offer.exitDate.year;
     ageAtExit = profile.ageInYear(exitYear);
@@ -309,6 +332,12 @@ class _ScenarioBuilder {
   final DateTime referenceDate;
   final int horizon;
   final ExitParams params;
+  final bool includeBuergergeld;
+  final int startingAssetsCents;
+  final int monthlyExpensesCents;
+  final int kduMonthlyCents;
+  final int householdSize;
+  final BuergergeldParams buergergeld;
 
   late final int exitYear;
   late final int ageAtExit;
@@ -323,6 +352,10 @@ class _ScenarioBuilder {
   late final int regularEndOffset;
 
   int _clamp(int offset) => offset.clamp(0, horizon);
+
+  /// Calendar month for a horizon offset (month 0 == [referenceDate]).
+  DateTime _monthAt(int offset) =>
+      DateTime(referenceDate.year, referenceDate.month + offset);
 
   /// S4 – staying employed: salary net every month.
   ScenarioResult buildStay() {
@@ -375,61 +408,23 @@ class _ScenarioBuilder {
       ));
     }
 
-    // 2) Severance + settlements as a lump when the employment ends.
-    //    Only the termination agreement (S2) carries the negotiated
-    //    severance; the employer-dismissal downside (S1, "didn't sign,
-    //    got dismissed anyway") and a resignation (S3) do not.
+    // 2) ALG timing. The § 158 suspension (severance + shortened notice) and
+    //    the § 159 blocking period both push the ALG start out; the blocking
+    //    period also shortens the entitlement by a quarter. Determined before
+    //    the severance so its same-year ALG (Progressionsvorbehalt) is known.
     final hasSeverance = type == ScenarioType.aufhebungsvertrag;
     var blockingMonths = 0;
-    var suspensionMonths = 0;
-
-    if (hasSeverance) {
-      final sev = severanceComparison(
-        taxableIncomeWithoutSeveranceCents: taxableSalaryYear,
-        severanceCents: offer.severanceGrossCents,
-        splitting: profile.taxClass == TaxClass.iii,
-        params: params,
-      );
-      // Employer withholds regular taxation; the Fünftel saving is
-      // refunded later via the tax assessment.
-      final severanceNet =
-          offer.severanceGrossCents - sev.taxOnSeveranceRegularCents + _settlementsNet();
-      if (endOffset < horizon) {
-        net[endOffset] += severanceNet;
-        src[endOffset] = CashflowSource.severance;
-      }
-      if (sev.savingsCents > 0) {
-        flags.add(RiskFlag(
-          'fuenftel_erstattung',
-          'Die Steuerersparnis aus der Fünftelregelung von rund '
-              '${_euro(sev.savingsCents)} bekommst du erst über die '
-              'Steuererklärung im Folgejahr zurück, nicht sofort.',
-        ));
-        // Refund roughly a year after the exit (next year's assessment).
-        final refundOffset = endOffset + 12;
-        if (refundOffset < horizon) {
-          net[refundOffset] += sev.savingsCents;
-          if (src[refundOffset] == CashflowSource.gap) {
-            src[refundOffset] = CashflowSource.severanceRefund;
-          }
-        }
-      }
-
-      // § 158 suspension when the ordinary notice period was shortened.
-      // With a paid release until the regular end, the period is observed,
-      // so no suspension applies.
-      suspensionMonths = usePaidRelease ? 0 : _suspensionMonths();
-      if (suspensionMonths > 0) {
-        flags.add(RiskFlag(
-          'ruhen_158',
-          'Weil das Arbeitsverhältnis vor Ablauf der ordentlichen '
-              'Kündigungsfrist endet, ruht dein ALG-Anspruch rund '
-              '$suspensionMonths Monat(e) (§ 158 SGB III).',
-        ));
-      }
+    final suspensionMonths =
+        (hasSeverance && !usePaidRelease) ? _suspensionMonths() : 0;
+    if (suspensionMonths > 0) {
+      flags.add(RiskFlag(
+        'ruhen_158',
+        'Weil das Arbeitsverhältnis vor Ablauf der ordentlichen '
+            'Kündigungsfrist endet, ruht dein ALG-Anspruch rund '
+            '$suspensionMonths Monat(e) (§ 158 SGB III).',
+      ));
     }
 
-    // 3) Blocking period (Sperrzeit).
     switch (type) {
       case ScenarioType.eigenkuendigung:
         blockingMonths = _blockingMonths();
@@ -483,17 +478,110 @@ class _ScenarioBuilder {
         break;
     }
 
-    // 4) ALG phase: starts after the employment ends, delayed by
-    //    suspension and/or blocking period; blocking also shortens the
-    //    duration by a quarter.
     final algStart = _clamp(endOffset + max(blockingMonths, suspensionMonths));
     final effectiveMonths =
         blockingMonths > 0 ? (entitlementMonths * 3 + 3) ~/ 4 : entitlementMonths;
     final algEnd = min(algStart + effectiveMonths, horizon);
+
+    // 3) Severance + settlements as a lump when the employment ends. Only the
+    //    termination agreement (S2) carries the negotiated severance; the
+    //    employer-dismissal downside (S1) and a resignation (S3) do not.
+    if (hasSeverance) {
+      // § 32b: ALG received in the same calendar year as the severance payout
+      // is tax-free but raises the tax rate on the severance.
+      final severanceYear = _monthAt(endOffset).year;
+      var algProgressionCents = 0;
+      for (var m = algStart; m < algEnd; m++) {
+        if (m != endOffset && _monthAt(m).year == severanceYear) {
+          algProgressionCents += algMonth;
+        }
+      }
+      final sev = severanceComparison(
+        taxableIncomeWithoutSeveranceCents: taxableSalaryYear,
+        severanceCents: offer.severanceGrossCents,
+        splitting: profile.taxClass == TaxClass.iii,
+        progressionIncomeCents: algProgressionCents,
+        params: params,
+      );
+      // Employer withholds regular taxation; the Fünftel saving is refunded
+      // later via the tax assessment.
+      final severanceNet =
+          offer.severanceGrossCents - sev.taxOnSeveranceRegularCents + _settlementsNet();
+      if (endOffset < horizon) {
+        net[endOffset] += severanceNet;
+        src[endOffset] = CashflowSource.severance;
+      }
+      if (algProgressionCents > 0) {
+        flags.add(RiskFlag(
+          'progressionsvorbehalt',
+          'Das im Jahr $severanceYear bezogene ALG (rund '
+              '${_euro(algProgressionCents)}) ist steuerfrei, hebt aber über '
+              'den Progressionsvorbehalt (§ 32b EStG) deinen Steuersatz – auch '
+              'auf die Abfindung. Das ist hier bereits eingerechnet.',
+        ));
+      }
+      if (sev.savingsCents > 0) {
+        flags.add(RiskFlag(
+          'fuenftel_erstattung',
+          'Die Steuerersparnis aus der Fünftelregelung von rund '
+              '${_euro(sev.savingsCents)} bekommst du erst über die '
+              'Steuererklärung im Folgejahr zurück, nicht sofort.',
+        ));
+        // Refund roughly a year after the exit (next year's assessment).
+        final refundOffset = endOffset + 12;
+        if (refundOffset < horizon) {
+          net[refundOffset] += sev.savingsCents;
+          if (src[refundOffset] == CashflowSource.gap) {
+            src[refundOffset] = CashflowSource.severanceRefund;
+          }
+        }
+      }
+    }
+
+    // 4) Lay out the ALG phase (skips months already filled by salary or the
+    //    severance lump).
     for (var m = algStart; m < algEnd; m++) {
       if (src[m] == CashflowSource.gap) {
         net[m] += algMonth;
         src[m] = CashflowSource.alg;
+      }
+    }
+
+    // 5) Bürgergeld (SGB II) means-tested floor: after ALG ends, once usable
+    //    assets are spent down to the statutory allowance (Karenzzeit: higher
+    //    allowance in the first year of receipt), a benefit covers part of the
+    //    remaining gap. Simulates the asset draw-down over the horizon.
+    if (includeBuergergeld && monthlyExpensesCents > 0) {
+      final benefit = buergergeld.monthlyBenefitCents(kduMonthlyCents: kduMonthlyCents);
+      var assets = startingAssetsCents;
+      var monthsReceived = 0;
+      var everReceived = false;
+      for (var m = 0; m < horizon; m++) {
+        if (src[m] == CashflowSource.gap) {
+          final allowance = buergergeld.assetAllowanceCents(
+              monthsReceived: monthsReceived, householdSize: householdSize);
+          if (assets <= allowance) {
+            net[m] += benefit;
+            src[m] = CashflowSource.buergergeld;
+            monthsReceived++;
+            everReceived = true;
+          }
+        }
+        assets += net[m] - monthlyExpensesCents;
+        if (assets < 0) assets = 0;
+      }
+      if (everReceived) {
+        flags.add(RiskFlag(
+          'buergergeld',
+          'Nach dem ALG 1 kann im Betrachtungszeitraum Bürgergeld (SGB II) '
+              'greifen – aber erst, wenn dein Vermögen bis auf den Freibetrag '
+              'aufgebraucht ist (Karenzzeit im 1. Jahr rund '
+              '${_euro(buergergeld.assetAllowanceInKarenzCents)}, danach rund '
+              '${_euro(buergergeld.assetAllowanceAfterKarenzCents)} je Person). '
+              'Angesetzt ist der Regelsatz'
+              '${kduMonthlyCents > 0 ? ' plus Miete' : ' (Miete/Unterkunft käme obendrauf)'}'
+              ' – eine grobe Schätzung.',
+        ));
       }
     }
 

@@ -39,6 +39,38 @@ int incomeTax({
   return euroToCents(_tariffEuro(centsToEuroFloor(taxableIncomeCents), p.tariff));
 }
 
+/// Income tax with the special average rate of the Progressionsvorbehalt
+/// (§ 32b EStG).
+///
+/// Tax-free wage-replacement benefits ([progressionIncomeCents], e.g. ALG 1,
+/// Kurzarbeitergeld, Krankengeld) are themselves untaxed but raise the
+/// **average tax rate** applied to the actual taxable income – which makes
+/// e.g. a severance in the same calendar year more expensive.
+///
+/// Special rate = `incomeTax(zvE + progression) / (zvE + progression)`,
+/// applied to the actual `zvE` (§ 32b Abs. 2 EStG). When
+/// [progressionIncomeCents] ≤ 0 this equals [incomeTax]. The interaction
+/// with the Fünftelregelung (§ 34) is applied by using this rate uniformly
+/// in the comparison and is an estimate (see ASSUMPTIONS A19).
+int incomeTaxWithProgression({
+  required int taxableIncomeCents,
+  int progressionIncomeCents = 0,
+  bool splitting = false,
+  ExitParams? params,
+}) {
+  final p = params ?? ExitParams.year2026();
+  if (taxableIncomeCents <= 0) return 0;
+  if (progressionIncomeCents <= 0) {
+    return incomeTax(
+        taxableIncomeCents: taxableIncomeCents, splitting: splitting, params: p);
+  }
+  final combined = taxableIncomeCents + progressionIncomeCents;
+  final taxOnCombined =
+      incomeTax(taxableIncomeCents: combined, splitting: splitting, params: p);
+  // Average rate on the combined income, applied to the actual zvE.
+  return (taxableIncomeCents * taxOnCombined) ~/ combined;
+}
+
 /// Basic tariff on a taxable income in full euros; result in full euros
 /// (rounded down).
 int _tariffEuro(int x, TaxTariffParams t) {

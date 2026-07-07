@@ -146,4 +146,36 @@ void main() {
       expect(notApplicable.fifthRuleApplicable, isFalse);
     });
   });
+
+  group('M3 – Progressionsvorbehalt (§ 32b) on the severance', () {
+    test('same-year ALG raises the tax attributed to the severance', () {
+      final without = severanceComparison(
+        taxableIncomeWithoutSeveranceCents: eur(40000),
+        severanceCents: eur(50000),
+      );
+      final withAlg = severanceComparison(
+        taxableIncomeWithoutSeveranceCents: eur(40000),
+        severanceCents: eur(50000),
+        progressionIncomeCents: eur(12000), // ~8 months ALG in the same year
+      );
+      expect(withAlg.taxRegularCents, greaterThan(without.taxRegularCents));
+      expect(withAlg.taxFifthRuleCents, greaterThan(without.taxFifthRuleCents));
+      expect(withAlg.taxOnSeveranceFifthRuleCents,
+          greaterThan(without.taxOnSeveranceFifthRuleCents));
+    });
+
+    test('zero progression income equals the plain comparison', () {
+      final plain = severanceComparison(
+        taxableIncomeWithoutSeveranceCents: eur(40000),
+        severanceCents: eur(50000),
+      );
+      final zeroProg = severanceComparison(
+        taxableIncomeWithoutSeveranceCents: eur(40000),
+        severanceCents: eur(50000),
+        progressionIncomeCents: 0,
+      );
+      expect(zeroProg.taxRegularCents, plain.taxRegularCents);
+      expect(zeroProg.taxFifthRuleCents, plain.taxFifthRuleCents);
+    });
+  });
 }

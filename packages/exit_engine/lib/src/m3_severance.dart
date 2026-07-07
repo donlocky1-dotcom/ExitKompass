@@ -107,6 +107,7 @@ SeveranceTaxResult severanceComparison({
   required int taxableIncomeWithoutSeveranceCents,
   required int severanceCents,
   bool splitting = false,
+  int progressionIncomeCents = 0,
   int? otherIncomeYearCents,
   int? foregoneIncomeCents,
   ExitParams? params,
@@ -115,8 +116,14 @@ SeveranceTaxResult severanceComparison({
   final p = params ?? ExitParams.year2026();
   final taxableRest = max(0, taxableIncomeWithoutSeveranceCents);
 
-  int tax(int taxableCents) =>
-      incomeTax(taxableIncomeCents: taxableCents, splitting: splitting, params: p);
+  // § 32b: tax-free wage-replacement benefits in the same year (e.g. ALG 1)
+  // raise the average rate applied to the taxable income incl. the severance.
+  int tax(int taxableCents) => incomeTaxWithProgression(
+        taxableIncomeCents: taxableCents,
+        progressionIncomeCents: progressionIncomeCents,
+        splitting: splitting,
+        params: p,
+      );
 
   final taxBaseline = tax(taxableRest);
   final taxRegular = tax(taxableRest + severanceCents);
