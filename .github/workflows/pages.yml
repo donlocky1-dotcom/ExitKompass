@@ -1,0 +1,56 @@
+name: Deploy web app to GitHub Pages
+
+# Builds the Flutter app for the web (tool/preview_app.dart – the full UI with
+# in-memory state, so it runs in the browser without the native database) and
+# publishes it to GitHub Pages. Open the resulting URL on any device, e.g. an
+# iPhone's Safari.
+#
+# One-time setup by the repo owner: Settings → Pages → Build and deployment →
+# Source: "GitHub Actions". Then this workflow runs on every push to main.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.4
+          cache: true
+      - name: Build web
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter build web \
+            -t tool/preview_app.dart \
+            --release \
+            --base-href "/ExitKompass/" \
+            --no-web-resources-cdn
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

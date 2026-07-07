@@ -61,3 +61,21 @@ flutter analyze     # ohne Findings
 flutter test        # Widget- und Flow-Tests
 flutter run         # auf Gerät/Emulator
 ```
+
+## Web-Demo (zum Anschauen, z. B. am iPhone-Safari)
+
+Ein GitHub-Actions-Workflow (`.github/workflows/pages.yml`) baut die App als
+Web-Version und veröffentlicht sie auf **GitHub Pages**. Einmalig muss der
+Repo-Eigentümer unter *Settings → Pages → Build and deployment → Source*
+**„GitHub Actions"** wählen; danach deployt jeder Push auf `main`.
+
+Die Web-Demo nutzt `tool/preview_app.dart` – die volle Oberfläche mit
+**In-Memory-Zustand** (keine native Datenbank), damit sie im Browser läuft.
+Eingaben bleiben also nur bis zum Neuladen erhalten; die echte lokale
+Persistenz (Drift/SQLite) greift auf iOS/Android.
+
+Lokal bauen:
+
+```bash
+flutter build web -t tool/preview_app.dart --no-web-resources-cdn
+```
