@@ -397,6 +397,9 @@ Kündigung/Lücke erklären, Gehaltsverhandlung) mit STAR-Methode.
   DU stellst" (die Macht der richtigen Fragen). Kernidee: sich über den
   **Nutzen** verkaufen, Arbeits*markt* auf Augenhöhe, mit guten Rückfragen das
   Gespräch führen.
+- **A14.4 Brainteaser & Case-Fragen:** Zusätzlich ein kurzer Leitfaden
+  (`brainteaserIntro` + `brainteaserSteps`): Rückfragen stellen, laut denken,
+  Schritt für Schritt erklären – der Weg zählt mehr als die Zahl.
 
 ## A15 – M9 Karenzentschädigung (§§ 74 ff. HGB)
 

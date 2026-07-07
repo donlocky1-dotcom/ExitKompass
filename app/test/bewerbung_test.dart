@@ -29,6 +29,15 @@ void main() {
         expect(p.body, isNotEmpty);
       }
     });
+
+    test('brainteaser guide has an intro and steps', () {
+      expect(brainteaserIntro, isNotEmpty);
+      expect(brainteaserSteps, isNotEmpty);
+      for (final s in brainteaserSteps) {
+        expect(s.title, isNotEmpty);
+        expect(s.body, isNotEmpty);
+      }
+    });
   });
 
   testWidgets('training screen shows a question and expands its approach',

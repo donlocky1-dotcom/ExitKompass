@@ -62,6 +62,28 @@ class BewerbungScreen extends StatelessWidget {
                   for (final q in interviewQuestions.where((q) => q.category == category))
                     _QuestionTile(question: q),
                 ],
+                const SizedBox(height: 12),
+                Text('Brainteaser & Case-Fragen', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(brainteaserIntro, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 8),
+                for (final s in brainteaserSteps)
+                  Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(s.title,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                  color: theme.colorScheme.primary)),
+                          const SizedBox(height: 4),
+                          Text(s.body, style: theme.textTheme.bodyMedium),
+                        ],
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Text(
                   'Stand: $bewerbungReviewedOn. Allgemeine Tipps, keine '

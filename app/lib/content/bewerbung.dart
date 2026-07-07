@@ -87,6 +87,32 @@ class InterviewQuestion {
   final List<String> tips;
 }
 
+/// Intro for the brainteaser / case-question section.
+const String brainteaserIntro =
+    'Bei Brainteasern und Case-Fragen gibt es meist keine einzig richtige '
+    'Lösung. Die Interviewer wollen sehen, wie du unter Druck denkst, ein '
+    'Problem strukturiert angehst und deinen Gedankengang klar erklärst.';
+
+/// How to tackle a brainteaser / case question (reuses the principle model).
+const List<PrepPrinciple> brainteaserSteps = [
+  PrepPrinciple(
+    '1. Erst Rückfragen stellen',
+    'Kläre das Problem, bevor du losrechnest: Welche Mittel habe ich? Muss das '
+        'Ergebnis exakt sein? So zeigst du von Anfang an, dass du strukturiert '
+        'vorgehst.',
+  ),
+  PrepPrinciple(
+    '2. Laut denken',
+    'Sprich deine Annahmen aus und begründe sie. Bei Brainteasern musst du oft '
+        'selbst sinnvolle Annahmen treffen – mach sie transparent.',
+  ),
+  PrepPrinciple(
+    '3. Schritt für Schritt erklären',
+    'Nicht zur Lösung hetzen. Führe die Interviewer durch deinen Weg und '
+        'begründe jede Entscheidung. Der Weg zählt mehr als die Zahl.',
+  ),
+];
+
 /// The STAR method, shown as an intro on the training screen.
 const String starMethodExplainer =
     'Beantworte Beispiel-Fragen mit der STAR-Methode: '
