@@ -226,12 +226,87 @@ class _JobStep extends ConsumerWidget {
           value: data.entryDate,
           onChanged: (v) => notifier.update((d) => d.copyWith(entryDate: v)),
         ),
+        const SizedBox(height: 12),
+        _NoticePeriodCard(data: data),
+        const SizedBox(height: 8),
         _DateField(
-          label: 'Frühestes reguläres Ende (ordentliche Kündigungsfrist)',
+          label: 'Reguläres Ende der Kündigungsfrist (genaues Datum)',
           value: data.regularEndDate,
           onChanged: (v) => notifier.update((d) => d.copyWith(regularEndDate: v)),
         ),
       ],
+    );
+  }
+}
+
+/// Notice-period helper: shows the statutory § 622 suggestion from tenure and
+/// lets the user pick the period as whole months (which sets the exact end
+/// date). Longer contractual/collective-agreement periods are entered as the
+/// exact date below – they cannot be modelled automatically.
+class _NoticePeriodCard extends ConsumerWidget {
+  const _NoticePeriodCard({required this.data});
+  final WizardData data;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(wizardProvider.notifier);
+    final theme = Theme.of(context);
+    final anchor = data.noticeDate;
+    final statMonths = statutoryNoticePeriodMonths(data.tenureYears);
+    final selectedMonths = noticeMonthsBetween(anchor, data.regularEndDate);
+    const options = [1, 2, 3, 4, 6, 7];
+
+    void setMonths(int m) => notifier
+        .update((d) => d.copyWith(regularEndDate: noticeEndDate(anchor, m)));
+
+    return Card(
+      color: theme.colorScheme.surfaceContainerHighest,
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Kündigungsfrist', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 4),
+            Text(
+              'Gesetzlich (§ 622 BGB) bei ${data.tenureYears} Jahren '
+              'Betriebszugehörigkeit: $statMonths Monat(e) zum Monatsende.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final m in options)
+                  ChoiceChip(
+                    label: Text('$m Mon.'),
+                    selected: selectedMonths == m,
+                    onSelected: (_) => setMonths(m),
+                  ),
+              ],
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setMonths(statMonths),
+                icon: const Icon(Icons.gavel, size: 16),
+                label: Text('§ 622 übernehmen ($statMonths Mon.)'),
+              ),
+            ),
+            Text(
+              'Im Arbeits- oder Tarifvertrag (z. B. VAA in der Chemie) sind oft '
+              'längere, nach Betriebszugehörigkeit gestaffelte Fristen vereinbart. '
+              'Maßgeblich ist, was in deinem Vertrag steht – im Zweifel bei '
+              'Gewerkschaft/Berufsverband erfragen und unten das genaue Enddatum '
+              'eintragen.',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

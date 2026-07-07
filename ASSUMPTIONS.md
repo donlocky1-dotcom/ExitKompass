@@ -491,4 +491,22 @@ Nach Praxis-Feedback wurde die Szenario-Logik (M5) präzisiert:
 - **A17.4 Drift-Migration v4→v5:** Spalte `anticipates_operational_dismissal`
   (Default `false`) ergänzt; bestehende Profile bleiben gültig.
 
+## A18 – Kündigungsfrist als Eingabe, § 622 nur als Vorschlag (2026-07-07)
+
+- **A18.1 Frist ist Eingabe:** Die maßgebliche ordentliche Kündigungsfrist
+  steht im **Arbeits- oder Tarifvertrag** und ist oft **länger** als das
+  Gesetz (Tarif-/Rahmentarifverträge, z. B. VAA in der chemischen Industrie,
+  gestaffelt nach Betriebszugehörigkeit). Solche Fristen lassen sich **nicht**
+  zuverlässig automatisch abbilden; die App fragt deshalb das **reguläre
+  Enddatum** ab und weist ausdrücklich auf Vertrag/Tarif und Gewerkschaft/
+  Berufsverband hin.
+- **A18.2 § 622 als Vorschlag:** `statutoryNoticePeriodMonths` liefert die
+  gesetzliche Staffel (§ 622 Abs. 2 BGB) als Startwert (Monats-Chips +
+  „§ 622 übernehmen"); der Nutzer kann jederzeit eine längere Frist / ein
+  exaktes Datum setzen.
+- **A18.3 Näherung < 2 Jahre:** Die Grundkündigungsfrist (4 Wochen zum 15.
+  oder Monatsende, § 622 Abs. 1) wird im Monatsraster als **1 Monat** genähert.
+- **A18.4 Anker & Monatsende:** Das Enddatum wird aus dem Kündigungszugang
+  (`noticeDate`) plus N Monaten **zum Monatsende** berechnet (`noticeEndDate`).
+
 _(wird fortlaufend gepflegt)_

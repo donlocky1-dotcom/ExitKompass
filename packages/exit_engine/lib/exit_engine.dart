@@ -27,6 +27,7 @@ export 'src/m8_severance_timing.dart';
 export 'src/m9_non_compete.dart';
 export 'src/m10_vacation.dart';
 export 'src/money.dart';
+export 'src/notice_period.dart';
 export 'src/net_income.dart';
 export 'src/params.dart';
 export 'src/params_2026_data.dart' show params2026Json;
