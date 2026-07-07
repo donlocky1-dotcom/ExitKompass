@@ -93,6 +93,53 @@ const List<Article> ratgeberArticles = [
     ],
     sources: ['§ 34 EStG', '§ 4 KSchG'],
   ),
+  Article(
+    id: 'win-win-mythen',
+    category: ArticleCategory.verhandlung,
+    title: 'Sieben Mythen der Win-win-Verhandlung',
+    teaser: 'Nett, fair und vertrauensvoll allein macht dich in der Verhandlung '
+        'nicht stark – hier die wirksameren Strategien.',
+    sections: [
+      ArticleSection(
+        'Vertrauen → Interdependenz',
+        'Vertrauen ist subjektiv und braucht Zeit; es garantiert keine '
+            'Gegenleistung. Wirksamer ist es, die Anreize zu koppeln: Wenn beide '
+            'Seiten erkennen, dass Zusammenarbeit im eigenen Interesse liegt, '
+            'trägt die Einigung von selbst.',
+      ),
+      ArticleSection(
+        'Zuhören → proaktiv fragen',
+        'Bloßes (auch aktives) Zuhören ist reaktiv. Wer die Verhandlung führen '
+            'will, stellt zuerst Fragen und lenkt so das Gespräch dorthin, wo am '
+            'meisten zu lernen ist.',
+      ),
+      ArticleSection(
+        'Transparent → durchscheinend auf der Sache',
+        'Bei Beziehung und Kommunikation darfst du offen sein. Auf der '
+            'Sachebene gilt: nur so viel preisgeben, wie nötig ist, damit die '
+            'Gegenseite eine Einigung anstrebt – nicht mehr.',
+      ),
+      ArticleSection(
+        'Nett & fair → positiv und vernünftig',
+        'Nettigkeit kann als Schwäche gelesen werden. Sei stattdessen positiv, '
+            'aber nicht naiv, und statt „subjektiv fair" lieber „vernünftig": '
+            'ein Vorschlag, der im Wertesystem beider Seiten nachvollziehbar ist.',
+      ),
+      ArticleSection(
+        'Treu zur Person → treu zum Prozess',
+        'Bleib dem fairen Verhandlungsprozess verpflichtet, nicht bedingungslos '
+            'der Gegenseite. Und verpflichte dich dem guten Prozess – nicht einem '
+            'bestimmten Ergebnis, das du ohnehin nicht garantieren kannst.',
+      ),
+      ArticleSection(
+        'Das eigentliche Werkzeug: bewusster Machtverzicht',
+        'Auf Machtspiele zu verzichten ist keine Schwäche, sondern eine '
+            'strategische Entscheidung, die oft zu besseren Ergebnissen führt. '
+            '(Nach „Getting to Yes" von Fisher/Ury.)',
+      ),
+    ],
+    sources: ['Getting to Yes (Fisher/Ury)'],
+  ),
 
   // ------------------------------------------------------------------
   // Rechtsgrundlagen
