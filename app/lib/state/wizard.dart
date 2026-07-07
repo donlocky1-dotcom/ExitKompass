@@ -52,6 +52,7 @@ class WizardData {
     DateTime? exitDate,
     this.paidRelease = false,
     this.settlementsEuro = 0,
+    this.anticipatesOperationalDismissal = false,
     this.horizonMonths = 24,
     this.kuendigungsArt = KuendigungsArt.unbekannt,
     this.monthlyExpensesEuro = 2500,
@@ -83,6 +84,12 @@ class WizardData {
   final DateTime exitDate;
   final bool paidRelease;
   final int settlementsEuro;
+
+  /// Whether a termination agreement documents that it anticipates a lawful
+  /// operational (betriebsbedingt) employer dismissal. Drives whether the
+  /// ALG blocking period (Sperrzeit) is expected for the S2 scenario.
+  final bool anticipatesOperationalDismissal;
+
   final int horizonMonths;
 
   /// Grounds for the dismissal (persisted; suggests the estimate strength).
@@ -116,6 +123,7 @@ class WizardData {
     DateTime? exitDate,
     bool? paidRelease,
     int? settlementsEuro,
+    bool? anticipatesOperationalDismissal,
     int? horizonMonths,
     KuendigungsArt? kuendigungsArt,
     int? monthlyExpensesEuro,
@@ -141,6 +149,8 @@ class WizardData {
       exitDate: exitDate ?? this.exitDate,
       paidRelease: paidRelease ?? this.paidRelease,
       settlementsEuro: settlementsEuro ?? this.settlementsEuro,
+      anticipatesOperationalDismissal:
+          anticipatesOperationalDismissal ?? this.anticipatesOperationalDismissal,
       horizonMonths: horizonMonths ?? this.horizonMonths,
       kuendigungsArt: kuendigungsArt ?? this.kuendigungsArt,
       monthlyExpensesEuro: monthlyExpensesEuro ?? this.monthlyExpensesEuro,
@@ -175,6 +185,7 @@ class WizardData {
         exitDate: exitDate,
         paidRelease: paidRelease,
         settlementsCents: settlementsEuro * 100,
+        anticipatesOperationalDismissal: anticipatesOperationalDismissal,
       ),
       referenceDate: DateTime(now.year, now.month, 1),
       horizonMonths: horizonMonths,

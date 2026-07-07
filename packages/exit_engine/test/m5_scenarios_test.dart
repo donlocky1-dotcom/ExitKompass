@@ -18,11 +18,17 @@ EmploymentData _employment() => EmploymentData(
       regularEndDate: DateTime(2026, 4, 1),
     );
 
-OfferData _offer({int severance = 50000, DateTime? exit, bool release = false}) =>
+OfferData _offer({
+  int severance = 50000,
+  DateTime? exit,
+  bool release = false,
+  bool anticipates = false,
+}) =>
     OfferData(
       severanceGrossCents: eur(severance),
       exitDate: exit ?? DateTime(2026, 4, 1),
       paidRelease: release,
+      anticipatesOperationalDismissal: anticipates,
     );
 
 AggregateResult _aggregate({OfferData? offer, EmploymentData? employment}) =>
@@ -59,63 +65,67 @@ void main() {
     });
   });
 
-  group('M5 – S1 dismissal (severance + ALG, no blocking period)', () {
-    test('salary until exit, severance lump in the exit month, then ALG', () {
+  group('M5 – S1 employer dismissal (downside: no severance, no blocking)', () {
+    test('salary until the regular notice end, then ALG – no severance inflow', () {
       final r = _aggregate();
       final s1 = r.scenarios[ScenarioType.kuendigungAg]!;
-      // Exit is 3 months after the reference date.
+      // Salary runs to the regular end (month 3), then ALG right after.
       expect(s1.monthlySource[0], CashflowSource.salary);
       expect(s1.monthlySource[2], CashflowSource.salary);
-      expect(s1.monthlySource[3], CashflowSource.severance);
-      // ALG follows right after the exit (no blocking period).
-      expect(s1.monthlySource[4], CashflowSource.alg);
-      // The severance month is the largest inflow.
-      expect(s1.monthlyNetCents[3], greaterThan(s1.monthlyNetCents[0]));
+      expect(s1.monthlySource[3], CashflowSource.alg);
+      // The employer dismissal carries no negotiated severance.
+      expect(s1.monthlySource.contains(CashflowSource.severance), isFalse);
+      expect(s1.flags.any((f) => f.code == 'fuenftel_erstattung'), isFalse);
     });
 
-    test('a Fünftel refund flag is raised and the refund lands ~a year later', () {
-      final r = _aggregate(offer: _offer(severance: 60000));
-      final s1 = r.scenarios[ScenarioType.kuendigungAg]!;
-      expect(s1.flags.any((f) => f.code == 'fuenftel_erstattung'), isTrue);
-      // exit at month 3 -> refund at month 15
-      expect(s1.monthlySource[15], CashflowSource.severanceRefund);
-      expect(s1.monthlyNetCents[15], greaterThan(0));
-    });
-
-    test('no blocking-period flag for an employer dismissal', () {
+    test('no blocking-period flag, but a downside note is attached', () {
       final r = _aggregate();
       final s1 = r.scenarios[ScenarioType.kuendigungAg]!;
       expect(s1.flags.any((f) => f.code.startsWith('sperrzeit')), isFalse);
+      expect(s1.flags.any((f) => f.code == 'kuendigung_ag_downside'), isTrue);
     });
-  });
 
-  group('M5 – S3 resignation (blocking period, no severance)', () {
-    test('no severance inflow, blocking period delays ALG and shortens it', () {
-      final r = _aggregate();
+    test('a large negotiated offer does NOT lift S1 (severance is S2 only)', () {
+      final r = _aggregate(offer: _offer(severance: 200000));
       final s1 = r.scenarios[ScenarioType.kuendigungAg]!;
-      final s3 = r.scenarios[ScenarioType.eigenkuendigung]!;
-      expect(s3.flags.any((f) => f.code == 'sperrzeit_eigenkuendigung'), isTrue);
-      // No severance month.
-      expect(s3.monthlySource.contains(CashflowSource.severance), isFalse);
-      // ALG starts later than in S1 (12-week blocking period ≈ 3 months).
-      final s1AlgStart = s1.monthlySource.indexOf(CashflowSource.alg);
-      final s3AlgStart = s3.monthlySource.indexOf(CashflowSource.alg);
-      expect(s3AlgStart, greaterThan(s1AlgStart));
-      // And S3's cumulative net is clearly lower.
-      expect(s3.cumulativeNetCents, lessThan(s1.cumulativeNetCents));
+      expect(s1.monthlySource.contains(CashflowSource.severance), isFalse);
+      // S1 never beats staying – it is salary until notice end, then ALG.
+      expect(s1.cumulativeNetCents, lessThan(r.baseline.cumulativeNetCents));
     });
   });
 
-  group('M5 – S2 termination agreement', () {
-    test('modest severance to avert dismissal → blocking period unlikely flag', () {
-      // 0.5 monthly salaries × 10 years = 25,000 € is within the threshold.
-      final r = _aggregate(offer: _offer(severance: 25000));
+  group('M5 – S2 termination agreement (severance)', () {
+    test('salary until exit, severance lump in the exit month, refund ~a year later',
+        () {
+      final r = _aggregate(offer: _offer(severance: 60000, anticipates: true));
+      final s2 = r.scenarios[ScenarioType.aufhebungsvertrag]!;
+      expect(s2.monthlySource[0], CashflowSource.salary);
+      expect(s2.monthlySource[2], CashflowSource.salary);
+      expect(s2.monthlySource[3], CashflowSource.severance);
+      expect(s2.monthlyNetCents[3], greaterThan(s2.monthlyNetCents[0]));
+      expect(s2.flags.any((f) => f.code == 'fuenftel_erstattung'), isTrue);
+      // exit at month 3 -> refund at month 15
+      expect(s2.monthlySource[15], CashflowSource.severanceRefund);
+      expect(s2.monthlyNetCents[15], greaterThan(0));
+    });
+
+    test('anticipated operational dismissal + modest severance → blocking unlikely',
+        () {
+      // 0.5 monthly salaries × 10 years = 25,000 € is within the corridor,
+      // notice observed (exit == regular end), dismissal anticipated.
+      final r = _aggregate(offer: _offer(severance: 25000, anticipates: true));
       final s2 = r.scenarios[ScenarioType.aufhebungsvertrag]!;
       expect(s2.flags.any((f) => f.code == 'sperrzeit_unwahrscheinlich'), isTrue);
     });
 
-    test('large severance → blocking period likely flag', () {
-      final r = _aggregate(offer: _offer(severance: 120000));
+    test('without an anticipated dismissal → blocking likely, even if modest', () {
+      final r = _aggregate(offer: _offer(severance: 25000, anticipates: false));
+      final s2 = r.scenarios[ScenarioType.aufhebungsvertrag]!;
+      expect(s2.flags.any((f) => f.code == 'sperrzeit_wahrscheinlich'), isTrue);
+    });
+
+    test('anticipated dismissal but large severance → blocking likely', () {
+      final r = _aggregate(offer: _offer(severance: 120000, anticipates: true));
       final s2 = r.scenarios[ScenarioType.aufhebungsvertrag]!;
       expect(s2.flags.any((f) => f.code == 'sperrzeit_wahrscheinlich'), isTrue);
     });
@@ -133,6 +143,21 @@ void main() {
     });
   });
 
+  group('M5 – S3 resignation (blocking period, no severance)', () {
+    test('no severance inflow, blocking period delays ALG and shortens it', () {
+      final r = _aggregate();
+      final s1 = r.scenarios[ScenarioType.kuendigungAg]!;
+      final s3 = r.scenarios[ScenarioType.eigenkuendigung]!;
+      expect(s3.flags.any((f) => f.code == 'sperrzeit_eigenkuendigung'), isTrue);
+      expect(s3.monthlySource.contains(CashflowSource.severance), isFalse);
+      // ALG starts later than in S1 (12-week blocking period ≈ 3 months).
+      final s1AlgStart = s1.monthlySource.indexOf(CashflowSource.alg);
+      final s3AlgStart = s3.monthlySource.indexOf(CashflowSource.alg);
+      expect(s3AlgStart, greaterThan(s1AlgStart));
+      expect(s3.cumulativeNetCents, lessThan(s1.cumulativeNetCents));
+    });
+  });
+
   group('M5 – aggregation (deltas and best scenario)', () {
     test('deltas are relative to the baseline; baseline delta is 0', () {
       final r = _aggregate();
@@ -140,11 +165,18 @@ void main() {
       expect(r.deltaToBaselineCents(ScenarioType.eigenkuendigung), isNegative);
     });
 
-    test('with a large severance the dismissal scenario can beat staying', () {
-      final r = _aggregate(offer: _offer(severance: 200000));
-      expect(r.scenarios[ScenarioType.kuendigungAg]!.cumulativeNetCents,
+    test('the best scenario is an exit option, never the "stay" baseline', () {
+      // Even though staying trivially has the highest cumulative net, the
+      // star goes to the best actionable exit option.
+      final r = _aggregate(offer: _offer(severance: 25000, anticipates: true));
+      expect(r.bestScenario, isNot(ScenarioType.bleiben));
+    });
+
+    test('with a large severance the termination agreement can beat staying', () {
+      final r = _aggregate(offer: _offer(severance: 200000, anticipates: true));
+      expect(r.scenarios[ScenarioType.aufhebungsvertrag]!.cumulativeNetCents,
           greaterThan(r.baseline.cumulativeNetCents));
-      expect(r.bestScenario, ScenarioType.kuendigungAg);
+      expect(r.bestScenario, ScenarioType.aufhebungsvertrag);
     });
 
     test('a gap without income raises the health-insurance flag', () {
@@ -161,7 +193,7 @@ void main() {
     });
   });
 
-  group('M5 – paid release (Freistellung)', () {
+  group('M5 – paid release (Freistellung) on the termination agreement', () {
     // Exit already at month 3, but the regular end (and thus the paid
     // release) runs until month 9.
     EmploymentData employmentReleaseUntil9() => EmploymentData(
@@ -169,22 +201,27 @@ void main() {
           entryDate: DateTime(2016, 1, 1),
           regularEndDate: DateTime(2026, 10, 1), // 9 months after reference
         );
-    OfferData offerExit3(bool release) =>
-        _offer(exit: DateTime(2026, 4, 1), release: release);
+    // Modest, in-corridor severance so blocking does not confound the paid
+    // release assertions (ALG starts right after the regular end).
+    OfferData offerExit3(bool release) => _offer(
+        severance: 25000,
+        exit: DateTime(2026, 4, 1),
+        release: release,
+        anticipates: true);
 
     test('salary continues to the regular end and severance lands there', () {
       final r = _aggregate(
         employment: employmentReleaseUntil9(),
         offer: offerExit3(true),
       );
-      final s1 = r.scenarios[ScenarioType.kuendigungAg]!;
+      final s2 = r.scenarios[ScenarioType.aufhebungsvertrag]!;
       // Salary runs through month 8 (regular end at month 9), not month 3.
-      expect(s1.monthlySource[3], CashflowSource.salary);
-      expect(s1.monthlySource[8], CashflowSource.salary);
-      expect(s1.monthlySource[9], CashflowSource.severance);
+      expect(s2.monthlySource[3], CashflowSource.salary);
+      expect(s2.monthlySource[8], CashflowSource.salary);
+      expect(s2.monthlySource[9], CashflowSource.severance);
       // ALG only after the regular end.
-      expect(s1.monthlySource[10], CashflowSource.alg);
-      expect(s1.flags.any((f) => f.code == 'freistellung'), isTrue);
+      expect(s2.monthlySource[10], CashflowSource.alg);
+      expect(s2.flags.any((f) => f.code == 'freistellung'), isTrue);
     });
 
     test('paid release beats the same offer without release (more salary months)',
@@ -192,27 +229,26 @@ void main() {
       final withRelease = _aggregate(
         employment: employmentReleaseUntil9(),
         offer: offerExit3(true),
-      ).scenarios[ScenarioType.kuendigungAg]!;
+      ).scenarios[ScenarioType.aufhebungsvertrag]!;
       final withoutRelease = _aggregate(
         employment: employmentReleaseUntil9(),
         offer: offerExit3(false),
-      ).scenarios[ScenarioType.kuendigungAg]!;
+      ).scenarios[ScenarioType.aufhebungsvertrag]!;
       expect(withRelease.cumulativeNetCents,
           greaterThan(withoutRelease.cumulativeNetCents));
     });
 
     test('paid release suppresses the § 158 suspension (notice period observed)', () {
-      // Without release: exit before regular end + severance → § 158 ruhen.
       final withoutRelease = _aggregate(
         employment: employmentReleaseUntil9(),
         offer: offerExit3(false),
-      ).scenarios[ScenarioType.kuendigungAg]!;
+      ).scenarios[ScenarioType.aufhebungsvertrag]!;
       expect(withoutRelease.flags.any((f) => f.code == 'ruhen_158'), isTrue);
 
       final withRelease = _aggregate(
         employment: employmentReleaseUntil9(),
         offer: offerExit3(true),
-      ).scenarios[ScenarioType.kuendigungAg]!;
+      ).scenarios[ScenarioType.aufhebungsvertrag]!;
       expect(withRelease.flags.any((f) => f.code == 'ruhen_158'), isFalse);
     });
 

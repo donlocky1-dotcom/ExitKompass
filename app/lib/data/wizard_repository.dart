@@ -36,6 +36,7 @@ class WizardRepository {
       exitDate: row.exitDate,
       paidRelease: row.paidRelease,
       settlementsEuro: row.settlementsEuro,
+      anticipatesOperationalDismissal: row.anticipatesOperationalDismissal,
       horizonMonths: row.horizonMonths,
       kuendigungsArt: KuendigungsArt.values[row.kuendigungsArt],
       monthlyExpensesEuro: row.monthlyExpensesEuro,
@@ -66,6 +67,8 @@ class WizardRepository {
             exitDate: d.exitDate,
             paidRelease: d.paidRelease,
             settlementsEuro: d.settlementsEuro,
+            anticipatesOperationalDismissal:
+                Value(d.anticipatesOperationalDismissal),
             horizonMonths: d.horizonMonths,
             kuendigungsArt: Value(d.kuendigungsArt.index),
             monthlyExpensesEuro: Value(d.monthlyExpensesEuro),

@@ -132,9 +132,12 @@ class OfferData {
     required this.exitDate,
     this.paidRelease = false,
     this.settlementsCents = 0,
+    this.anticipatesOperationalDismissal = false,
   });
 
-  /// Gross severance pay.
+  /// Gross severance pay (the negotiated amount of the termination
+  /// agreement, S2). The employer-dismissal downside (S1) carries no
+  /// severance.
   final int severanceGrossCents;
 
   /// Exit date per the offer (may be earlier than [EmploymentData.regularEndDate]).
@@ -145,6 +148,12 @@ class OfferData {
 
   /// Gross settlements (remaining holiday, bonus payout).
   final int settlementsCents;
+
+  /// Whether the termination agreement documents that it anticipates a
+  /// lawful **operational** (betriebsbedingt) employer dismissal. Together
+  /// with an observed notice period and a § 1a-conforming severance this is
+  /// a *wichtiger Grund* that avoids the ALG blocking period (§ 159 SGB III).
+  final bool anticipatesOperationalDismissal;
 }
 
 /// Result for a single scenario.
@@ -185,8 +194,13 @@ class AggregateResult {
   /// The reference baseline (staying employed).
   ScenarioResult get baseline => scenarios[ScenarioType.bleiben]!;
 
-  /// The scenario with the highest cumulative net over the horizon.
+  /// The best **actionable** exit scenario over the horizon, i.e. the one
+  /// with the highest cumulative net among S1–S3. Staying employed
+  /// ([ScenarioType.bleiben]) is the reference baseline, not a choice on
+  /// the table when a termination is already on the horizon, so it never
+  /// wins the "best" star (it would trivially always win on full salary).
   ScenarioType get bestScenario => scenarios.values
+      .where((s) => s.type != ScenarioType.bleiben)
       .reduce((a, b) => b.cumulativeNetCents > a.cumulativeNetCents ? b : a)
       .type;
 
@@ -327,12 +341,26 @@ class _ScenarioBuilder {
     final src = List<CashflowSource>.filled(horizon, CashflowSource.gap);
     final flags = <RiskFlag>[];
 
-    // Paid release (Freistellung) applies to the offer-based scenarios
-    // (S1/S2): the employment continues to the regular end date, so full
-    // salary is paid until then and ALG starts only afterwards. A
-    // resignation (S3) ends at the chosen exit date.
-    final usePaidRelease = offer.paidRelease && type != ScenarioType.eigenkuendigung;
-    final endOffset = usePaidRelease ? regularEndOffset : exitOffset;
+    // When the employment actually ends (salary stops) depends on the
+    // scenario:
+    //  * S1 employer dismissal – the employer must observe the ordinary
+    //    notice period, so salary runs to the regular end date;
+    //  * S2 termination agreement – to the agreed exit date, or to the
+    //    regular end when a paid release (Freistellung) was agreed;
+    //  * S3 resignation – to the chosen exit date.
+    final usePaidRelease =
+        offer.paidRelease && type == ScenarioType.aufhebungsvertrag;
+    final int endOffset;
+    switch (type) {
+      case ScenarioType.kuendigungAg:
+        endOffset = regularEndOffset;
+      case ScenarioType.aufhebungsvertrag:
+        endOffset = usePaidRelease ? regularEndOffset : exitOffset;
+      case ScenarioType.eigenkuendigung:
+        endOffset = exitOffset;
+      case ScenarioType.bleiben:
+        endOffset = horizon;
+    }
 
     // 1) Salary until the employment actually ends.
     for (var m = 0; m < endOffset && m < horizon; m++) {
@@ -347,9 +375,11 @@ class _ScenarioBuilder {
       ));
     }
 
-    // 2) Severance + settlements as a lump when the employment ends
-    //    (S1/S2 only).
-    final hasSeverance = type != ScenarioType.eigenkuendigung;
+    // 2) Severance + settlements as a lump when the employment ends.
+    //    Only the termination agreement (S2) carries the negotiated
+    //    severance; the employer-dismissal downside (S1, "didn't sign,
+    //    got dismissed anyway") and a resignation (S3) do not.
+    final hasSeverance = type == ScenarioType.aufhebungsvertrag;
     var blockingMonths = 0;
     var suspensionMonths = 0;
 
@@ -400,38 +430,57 @@ class _ScenarioBuilder {
     }
 
     // 3) Blocking period (Sperrzeit).
-    if (type == ScenarioType.eigenkuendigung) {
-      blockingMonths = _blockingMonths();
-      flags.add(const RiskFlag(
-        'sperrzeit_eigenkuendigung',
-        'Bei einer Eigenkündigung ohne wichtigen Grund verhängt die '
-            'Agentur für Arbeit in der Regel eine Sperrzeit von 12 Wochen '
-            'und kürzt die Anspruchsdauer um ein Viertel (§ 159 SGB III).',
-      ));
-    } else if (type == ScenarioType.aufhebungsvertrag) {
-      final unlikely = blockingPeriodUnlikely(
-        dismissalWasThreatened: true,
-        severanceCents: offer.severanceGrossCents,
-        grossMonthCents: employment.grossMonthCents,
-        tenureYears: tenureYears,
-      );
-      if (unlikely) {
-        flags.add(const RiskFlag(
-          'sperrzeit_unwahrscheinlich',
-          'Bei einem Aufhebungsvertrag zur Abwendung einer drohenden '
-              'betriebsbedingten Kündigung mit maßvoller Abfindung ist eine '
-              'Sperrzeit meist unwahrscheinlich – lass das aber im Einzelfall '
-              'prüfen.',
-        ));
-      } else {
+    switch (type) {
+      case ScenarioType.eigenkuendigung:
         blockingMonths = _blockingMonths();
         flags.add(const RiskFlag(
-          'sperrzeit_wahrscheinlich',
-          'Ein Aufhebungsvertrag kann eine Sperrzeit von 12 Wochen auslösen '
-              '(§ 159 SGB III) und die Anspruchsdauer um ein Viertel kürzen – '
-              'lass die Voraussetzungen prüfen.',
+          'sperrzeit_eigenkuendigung',
+          'Bei einer Eigenkündigung ohne wichtigen Grund verhängt die '
+              'Agentur für Arbeit in der Regel eine Sperrzeit von 12 Wochen '
+              'und kürzt die Anspruchsdauer um ein Viertel (§ 159 SGB III).',
         ));
-      }
+      case ScenarioType.aufhebungsvertrag:
+        final noticeObserved = usePaidRelease ||
+            !offer.exitDate.isBefore(employment.regularEndDate);
+        final unlikely = blockingPeriodUnlikely(
+          dismissalWasThreatened: offer.anticipatesOperationalDismissal,
+          noticePeriodObserved: noticeObserved,
+          severanceCents: offer.severanceGrossCents,
+          grossMonthCents: employment.grossMonthCents,
+          tenureYears: tenureYears,
+        );
+        if (unlikely) {
+          flags.add(const RiskFlag(
+            'sperrzeit_unwahrscheinlich',
+            'Weil der Aufhebungsvertrag eine drohende betriebsbedingte '
+                'Kündigung vorwegnimmt, die Kündigungsfrist gewahrt ist und '
+                'die Abfindung im Rahmen (0,25–0,5 Monatsgehälter je Jahr) '
+                'bleibt, ist eine Sperrzeit meist unwahrscheinlich – lass es '
+                'aber im Einzelfall prüfen (§ 159 SGB III).',
+          ));
+        } else {
+          blockingMonths = _blockingMonths();
+          flags.add(const RiskFlag(
+            'sperrzeit_wahrscheinlich',
+            'Für diesen Aufhebungsvertrag sind die Voraussetzungen für den '
+                'Wegfall der Sperrzeit nicht erfüllt (keine vorweggenommene '
+                'betriebsbedingte Kündigung, Kündigungsfrist nicht gewahrt '
+                'oder Abfindung über 0,5 Monatsgehältern je Jahr). Dann drohen '
+                '12 Wochen Sperrzeit und ein Viertel weniger Anspruchsdauer '
+                '(§ 159 SGB III) – lass die Voraussetzungen prüfen.',
+          ));
+        }
+      case ScenarioType.kuendigungAg:
+        flags.add(const RiskFlag(
+          'kuendigung_ag_downside',
+          'Die Rückfallebene: Wenn du nicht unterschreibst und der '
+              'Arbeitgeber (betriebsbedingt) kündigt, bekommst du Gehalt bis '
+              'zum Ende der Kündigungsfrist und danach ALG 1 – ohne Abfindung, '
+              'aber ohne Sperrzeit. Eine Abfindung gäbe es hier nur über eine '
+              'Kündigungsschutzklage bzw. einen Vergleich.',
+        ));
+      case ScenarioType.bleiben:
+        break;
     }
 
     // 4) ALG phase: starts after the employment ends, delayed by

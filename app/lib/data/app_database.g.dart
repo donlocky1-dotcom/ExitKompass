@@ -270,6 +270,21 @@ class $WizardStatesTable extends WizardStates
     requiredDuringInsert: false,
     defaultValue: const Constant(10000),
   );
+  static const VerificationMeta _anticipatesOperationalDismissalMeta =
+      const VerificationMeta('anticipatesOperationalDismissal');
+  @override
+  late final GeneratedColumn<bool> anticipatesOperationalDismissal =
+      GeneratedColumn<bool>(
+        'anticipates_operational_dismissal',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("anticipates_operational_dismissal" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -295,6 +310,7 @@ class $WizardStatesTable extends WizardStates
     kuendigungsArt,
     monthlyExpensesEuro,
     savingsEuro,
+    anticipatesOperationalDismissal,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -526,6 +542,15 @@ class $WizardStatesTable extends WizardStates
         ),
       );
     }
+    if (data.containsKey('anticipates_operational_dismissal')) {
+      context.handle(
+        _anticipatesOperationalDismissalMeta,
+        anticipatesOperationalDismissal.isAcceptableOrUnknown(
+          data['anticipates_operational_dismissal']!,
+          _anticipatesOperationalDismissalMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -627,6 +652,10 @@ class $WizardStatesTable extends WizardStates
         DriftSqlType.int,
         data['${effectivePrefix}savings_euro'],
       )!,
+      anticipatesOperationalDismissal: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}anticipates_operational_dismissal'],
+      )!,
     );
   }
 
@@ -667,6 +696,11 @@ class WizardState extends DataClass implements Insertable<WizardState> {
   /// rows valid.
   final int monthlyExpensesEuro;
   final int savingsEuro;
+
+  /// Added in schema v5. Termination agreement anticipates a lawful
+  /// operational dismissal (drives the S2 Sperrzeit expectation). Default
+  /// false keeps existing rows valid.
+  final bool anticipatesOperationalDismissal;
   const WizardState({
     required this.id,
     required this.situation,
@@ -691,6 +725,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     required this.kuendigungsArt,
     required this.monthlyExpensesEuro,
     required this.savingsEuro,
+    required this.anticipatesOperationalDismissal,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -720,6 +755,9 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     map['kuendigungs_art'] = Variable<int>(kuendigungsArt);
     map['monthly_expenses_euro'] = Variable<int>(monthlyExpensesEuro);
     map['savings_euro'] = Variable<int>(savingsEuro);
+    map['anticipates_operational_dismissal'] = Variable<bool>(
+      anticipatesOperationalDismissal,
+    );
     return map;
   }
 
@@ -748,6 +786,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
       kuendigungsArt: Value(kuendigungsArt),
       monthlyExpensesEuro: Value(monthlyExpensesEuro),
       savingsEuro: Value(savingsEuro),
+      anticipatesOperationalDismissal: Value(anticipatesOperationalDismissal),
     );
   }
 
@@ -786,6 +825,9 @@ class WizardState extends DataClass implements Insertable<WizardState> {
         json['monthlyExpensesEuro'],
       ),
       savingsEuro: serializer.fromJson<int>(json['savingsEuro']),
+      anticipatesOperationalDismissal: serializer.fromJson<bool>(
+        json['anticipatesOperationalDismissal'],
+      ),
     );
   }
   @override
@@ -817,6 +859,9 @@ class WizardState extends DataClass implements Insertable<WizardState> {
       'kuendigungsArt': serializer.toJson<int>(kuendigungsArt),
       'monthlyExpensesEuro': serializer.toJson<int>(monthlyExpensesEuro),
       'savingsEuro': serializer.toJson<int>(savingsEuro),
+      'anticipatesOperationalDismissal': serializer.toJson<bool>(
+        anticipatesOperationalDismissal,
+      ),
     };
   }
 
@@ -844,6 +889,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     int? kuendigungsArt,
     int? monthlyExpensesEuro,
     int? savingsEuro,
+    bool? anticipatesOperationalDismissal,
   }) => WizardState(
     id: id ?? this.id,
     situation: situation ?? this.situation,
@@ -869,6 +915,8 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     kuendigungsArt: kuendigungsArt ?? this.kuendigungsArt,
     monthlyExpensesEuro: monthlyExpensesEuro ?? this.monthlyExpensesEuro,
     savingsEuro: savingsEuro ?? this.savingsEuro,
+    anticipatesOperationalDismissal:
+        anticipatesOperationalDismissal ?? this.anticipatesOperationalDismissal,
   );
   WizardState copyWithCompanion(WizardStatesCompanion data) {
     return WizardState(
@@ -927,6 +975,10 @@ class WizardState extends DataClass implements Insertable<WizardState> {
       savingsEuro: data.savingsEuro.present
           ? data.savingsEuro.value
           : this.savingsEuro,
+      anticipatesOperationalDismissal:
+          data.anticipatesOperationalDismissal.present
+          ? data.anticipatesOperationalDismissal.value
+          : this.anticipatesOperationalDismissal,
     );
   }
 
@@ -955,7 +1007,10 @@ class WizardState extends DataClass implements Insertable<WizardState> {
           ..write('noticeDate: $noticeDate, ')
           ..write('kuendigungsArt: $kuendigungsArt, ')
           ..write('monthlyExpensesEuro: $monthlyExpensesEuro, ')
-          ..write('savingsEuro: $savingsEuro')
+          ..write('savingsEuro: $savingsEuro, ')
+          ..write(
+            'anticipatesOperationalDismissal: $anticipatesOperationalDismissal',
+          )
           ..write(')'))
         .toString();
   }
@@ -985,6 +1040,7 @@ class WizardState extends DataClass implements Insertable<WizardState> {
     kuendigungsArt,
     monthlyExpensesEuro,
     savingsEuro,
+    anticipatesOperationalDismissal,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1013,7 +1069,9 @@ class WizardState extends DataClass implements Insertable<WizardState> {
           other.noticeDate == this.noticeDate &&
           other.kuendigungsArt == this.kuendigungsArt &&
           other.monthlyExpensesEuro == this.monthlyExpensesEuro &&
-          other.savingsEuro == this.savingsEuro);
+          other.savingsEuro == this.savingsEuro &&
+          other.anticipatesOperationalDismissal ==
+              this.anticipatesOperationalDismissal);
 }
 
 class WizardStatesCompanion extends UpdateCompanion<WizardState> {
@@ -1040,6 +1098,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
   final Value<int> kuendigungsArt;
   final Value<int> monthlyExpensesEuro;
   final Value<int> savingsEuro;
+  final Value<bool> anticipatesOperationalDismissal;
   const WizardStatesCompanion({
     this.id = const Value.absent(),
     this.situation = const Value.absent(),
@@ -1064,6 +1123,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     this.kuendigungsArt = const Value.absent(),
     this.monthlyExpensesEuro = const Value.absent(),
     this.savingsEuro = const Value.absent(),
+    this.anticipatesOperationalDismissal = const Value.absent(),
   });
   WizardStatesCompanion.insert({
     this.id = const Value.absent(),
@@ -1089,6 +1149,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     this.kuendigungsArt = const Value.absent(),
     this.monthlyExpensesEuro = const Value.absent(),
     this.savingsEuro = const Value.absent(),
+    this.anticipatesOperationalDismissal = const Value.absent(),
   }) : situation = Value(situation),
        birthYear = Value(birthYear),
        taxClass = Value(taxClass),
@@ -1132,6 +1193,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     Expression<int>? kuendigungsArt,
     Expression<int>? monthlyExpensesEuro,
     Expression<int>? savingsEuro,
+    Expression<bool>? anticipatesOperationalDismissal,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1161,6 +1223,8 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
       if (monthlyExpensesEuro != null)
         'monthly_expenses_euro': monthlyExpensesEuro,
       if (savingsEuro != null) 'savings_euro': savingsEuro,
+      if (anticipatesOperationalDismissal != null)
+        'anticipates_operational_dismissal': anticipatesOperationalDismissal,
     });
   }
 
@@ -1188,6 +1252,7 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     Value<int>? kuendigungsArt,
     Value<int>? monthlyExpensesEuro,
     Value<int>? savingsEuro,
+    Value<bool>? anticipatesOperationalDismissal,
   }) {
     return WizardStatesCompanion(
       id: id ?? this.id,
@@ -1214,6 +1279,9 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
       kuendigungsArt: kuendigungsArt ?? this.kuendigungsArt,
       monthlyExpensesEuro: monthlyExpensesEuro ?? this.monthlyExpensesEuro,
       savingsEuro: savingsEuro ?? this.savingsEuro,
+      anticipatesOperationalDismissal:
+          anticipatesOperationalDismissal ??
+          this.anticipatesOperationalDismissal,
     );
   }
 
@@ -1293,6 +1361,11 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
     if (savingsEuro.present) {
       map['savings_euro'] = Variable<int>(savingsEuro.value);
     }
+    if (anticipatesOperationalDismissal.present) {
+      map['anticipates_operational_dismissal'] = Variable<bool>(
+        anticipatesOperationalDismissal.value,
+      );
+    }
     return map;
   }
 
@@ -1321,7 +1394,10 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
           ..write('noticeDate: $noticeDate, ')
           ..write('kuendigungsArt: $kuendigungsArt, ')
           ..write('monthlyExpensesEuro: $monthlyExpensesEuro, ')
-          ..write('savingsEuro: $savingsEuro')
+          ..write('savingsEuro: $savingsEuro, ')
+          ..write(
+            'anticipatesOperationalDismissal: $anticipatesOperationalDismissal',
+          )
           ..write(')'))
         .toString();
   }
@@ -1585,6 +1661,7 @@ typedef $$WizardStatesTableCreateCompanionBuilder =
       Value<int> kuendigungsArt,
       Value<int> monthlyExpensesEuro,
       Value<int> savingsEuro,
+      Value<bool> anticipatesOperationalDismissal,
     });
 typedef $$WizardStatesTableUpdateCompanionBuilder =
     WizardStatesCompanion Function({
@@ -1611,6 +1688,7 @@ typedef $$WizardStatesTableUpdateCompanionBuilder =
       Value<int> kuendigungsArt,
       Value<int> monthlyExpensesEuro,
       Value<int> savingsEuro,
+      Value<bool> anticipatesOperationalDismissal,
     });
 
 class $$WizardStatesTableFilterComposer
@@ -1734,6 +1812,11 @@ class $$WizardStatesTableFilterComposer
 
   ColumnFilters<int> get savingsEuro => $composableBuilder(
     column: $table.savingsEuro,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get anticipatesOperationalDismissal => $composableBuilder(
+    column: $table.anticipatesOperationalDismissal,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1861,6 +1944,12 @@ class $$WizardStatesTableOrderingComposer
     column: $table.savingsEuro,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get anticipatesOperationalDismissal =>
+      $composableBuilder(
+        column: $table.anticipatesOperationalDismissal,
+        builder: (column) => ColumnOrderings(column),
+      );
 }
 
 class $$WizardStatesTableAnnotationComposer
@@ -1972,6 +2061,12 @@ class $$WizardStatesTableAnnotationComposer
     column: $table.savingsEuro,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get anticipatesOperationalDismissal =>
+      $composableBuilder(
+        column: $table.anticipatesOperationalDismissal,
+        builder: (column) => column,
+      );
 }
 
 class $$WizardStatesTableTableManager
@@ -2029,6 +2124,8 @@ class $$WizardStatesTableTableManager
                 Value<int> kuendigungsArt = const Value.absent(),
                 Value<int> monthlyExpensesEuro = const Value.absent(),
                 Value<int> savingsEuro = const Value.absent(),
+                Value<bool> anticipatesOperationalDismissal =
+                    const Value.absent(),
               }) => WizardStatesCompanion(
                 id: id,
                 situation: situation,
@@ -2053,6 +2150,8 @@ class $$WizardStatesTableTableManager
                 kuendigungsArt: kuendigungsArt,
                 monthlyExpensesEuro: monthlyExpensesEuro,
                 savingsEuro: savingsEuro,
+                anticipatesOperationalDismissal:
+                    anticipatesOperationalDismissal,
               ),
           createCompanionCallback:
               ({
@@ -2079,6 +2178,8 @@ class $$WizardStatesTableTableManager
                 Value<int> kuendigungsArt = const Value.absent(),
                 Value<int> monthlyExpensesEuro = const Value.absent(),
                 Value<int> savingsEuro = const Value.absent(),
+                Value<bool> anticipatesOperationalDismissal =
+                    const Value.absent(),
               }) => WizardStatesCompanion.insert(
                 id: id,
                 situation: situation,
@@ -2103,6 +2204,8 @@ class $$WizardStatesTableTableManager
                 kuendigungsArt: kuendigungsArt,
                 monthlyExpensesEuro: monthlyExpensesEuro,
                 savingsEuro: savingsEuro,
+                anticipatesOperationalDismissal:
+                    anticipatesOperationalDismissal,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

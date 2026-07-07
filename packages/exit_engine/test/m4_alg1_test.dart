@@ -118,11 +118,13 @@ void main() {
   });
 
   group('M4 – blocking period heuristic (spec §5, M4)', () {
-    test('termination agreement to avert an operational dismissal, severance within '
-        '0.5 monthly salaries per year of tenure: blocking period unlikely', () {
+    test('termination agreement to avert an operational dismissal, notice '
+        'observed, severance within 0.5 monthly salaries per year of tenure: '
+        'blocking period unlikely', () {
       expect(
           blockingPeriodUnlikely(
             dismissalWasThreatened: true,
+            noticePeriodObserved: true,
             severanceCents: eur(25000), // exactly 0.5 * 5,000 € * 10 years
             grossMonthCents: eur(5000),
             tenureYears: 10,
@@ -134,7 +136,21 @@ void main() {
       expect(
           blockingPeriodUnlikely(
             dismissalWasThreatened: true,
+            noticePeriodObserved: true,
             severanceCents: eur(25001),
+            grossMonthCents: eur(5000),
+            tenureYears: 10,
+          ),
+          isFalse);
+    });
+
+    test('notice period not observed: no exemption even if dismissal threatened',
+        () {
+      expect(
+          blockingPeriodUnlikely(
+            dismissalWasThreatened: true,
+            noticePeriodObserved: false,
+            severanceCents: eur(10000),
             grossMonthCents: eur(5000),
             tenureYears: 10,
           ),
@@ -145,6 +161,7 @@ void main() {
       expect(
           blockingPeriodUnlikely(
             dismissalWasThreatened: false,
+            noticePeriodObserved: true,
             severanceCents: eur(1000),
             grossMonthCents: eur(5000),
             tenureYears: 10,

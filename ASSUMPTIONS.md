@@ -467,4 +467,28 @@ Englisch" + Conventional Commits) migriert:
   Verhaltensgleichheit (Golden-Pins unverändert).
 - JSON-Parameterschlüssel bleiben deutsch (A1.7).
 
+## A17 – Szenario-Modell geschärft (2026-07-07, Nutzer-Feedback)
+
+Nach Praxis-Feedback wurde die Szenario-Logik (M5) präzisiert:
+
+- **A17.1 „Bleiben" ist Referenz, kein Sieger:** Der „bestes Szenario"-Stern
+  wird nur unter den echten Exit-Optionen (S1–S3) vergeben. „Bleiben" ist
+  trivial immer am höchsten (volles Gehalt) und dient ausschließlich als
+  Vergleichsmaßstab (`AggregateResult.bestScenario` schließt `bleiben` aus).
+- **A17.2 S1 „Kündigung durch AG" = Downside ohne Abfindung:** Die verhandelte
+  Abfindung gehört zum **Aufhebungsvertrag** (S2). Wer nicht unterschreibt und
+  betriebsbedingt gekündigt wird, erhält Gehalt bis zum **Ende der ordentlichen
+  Kündigungsfrist** (`regularEndDate`) und danach ALG 1 – **keine Abfindung**
+  (die gäbe es nur über Kündigungsschutzklage/Vergleich), aber **keine
+  Sperrzeit**. Bewusste Modell-Entscheidung des Nutzers.
+- **A17.3 Sperrzeit beim Aufhebungsvertrag an Eingaben gekoppelt:** Statt einer
+  fest verdrahteten Annahme entfällt die Sperrzeit nur, wenn (Fachliche
+  Weisungen der BA zu § 159 SGB III) der Vertrag eine **rechtmäßige
+  betriebsbedingte Kündigung vorwegnimmt** (neues Eingabefeld
+  `anticipatesOperationalDismissal`), die **Kündigungsfrist gewahrt** ist und
+  die Abfindung im **§ 1a-Korridor (0,25–0,5 Monatsgehälter je Jahr)** bleibt.
+  Heuristik mit ausdrücklichem „im Einzelfall prüfen"-Hinweis.
+- **A17.4 Drift-Migration v4→v5:** Spalte `anticipates_operational_dismissal`
+  (Default `false`) ergänzt; bestehende Profile bleiben gültig.
+
 _(wird fortlaufend gepflegt)_

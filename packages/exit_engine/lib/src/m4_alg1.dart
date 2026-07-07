@@ -199,23 +199,36 @@ BlockingPeriodResult blockingPeriodSimulation({
 }
 
 /// Heuristic of spec §5 (M4): a termination agreement concluded to avert
-/// a concretely threatened **operational** dismissal, with a severance of
-/// at most 0.5 gross monthly salaries per year of tenure, does as a rule
-/// NOT trigger a blocking period (Geschäftsanweisung of the BA to § 159
-/// SGB III).
+/// a concretely threatened, lawful **operational** (betriebsbedingt)
+/// dismissal does as a rule NOT trigger a blocking period when
+/// (Fachliche Weisungen of the BA to § 159 SGB III, Ziff. 159.1.2.1.1):
+///
+/// * the employer would otherwise have terminated for operational reasons
+///   ([dismissalWasThreatened]),
+/// * the ordinary notice period is observed ([noticePeriodObserved]), and
+/// * the severance stays within the § 1a-KSchG corridor of 0.25–0.5 gross
+///   monthly salaries per year of tenure.
+///
+/// A severance **above** 0.5 does not automatically cause a blocking
+/// period (it may still be accepted if the dismissal would have been
+/// socially justified), but the safe harbour is left, so the heuristic
+/// returns `false` there. A very small or zero severance stays inside the
+/// safe harbour (there is no lower bar for avoiding the blocking period).
 ///
 /// Returns `true` when a blocking period is unlikely. This is a
 /// heuristic, not a guarantee — the UI must always add a
 /// "have it checked" notice.
 bool blockingPeriodUnlikely({
   required bool dismissalWasThreatened,
+  required bool noticePeriodObserved,
   required int severanceCents,
   required int grossMonthCents,
   required int tenureYears,
 }) {
-  if (!dismissalWasThreatened) return false;
+  if (!dismissalWasThreatened || !noticePeriodObserved) return false;
   if (tenureYears <= 0 || grossMonthCents <= 0) return false;
-  // 0.5 monthly salaries per year of tenure, computed in exact cents.
+  // Upper edge of the § 1a corridor: 0.5 monthly salaries per year of
+  // tenure, computed in exact cents.
   final maxSeverance = grossMonthCents * tenureYears ~/ 2;
   return severanceCents <= maxSeverance;
 }

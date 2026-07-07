@@ -53,15 +53,17 @@ void main() {
     final file = File('${dir.path}/db.sqlite');
     addTearDown(() => dir.delete(recursive: true));
 
-    // Current (v4) db: seed a workbook answer, then simulate a v3 file by
-    // dropping the workbook table and resetting the version.
+    // Current db: seed a workbook answer, then simulate a v3 file by dropping
+    // the workbook table and the columns added after v3, resetting the version.
     final v4 = AppDatabase(NativeDatabase(file));
     await WorkbookRepository(v4).save('q1', 'bleibt-nicht'); // will be dropped
     await v4.customStatement('DROP TABLE workbook_answers');
+    await v4.customStatement(
+        'ALTER TABLE wizard_states DROP COLUMN anticipates_operational_dismissal');
     await v4.customStatement('PRAGMA user_version = 3');
     await v4.close();
 
-    // Reopen → onUpgrade(3→4) recreates the table (empty), no crash.
+    // Reopen → onUpgrade(3→5) recreates the table (empty) + re-adds columns.
     final upgraded = AppDatabase(NativeDatabase(file));
     final answers = await WorkbookRepository(upgraded).loadAll();
     expect(answers, isEmpty);

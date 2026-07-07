@@ -146,7 +146,10 @@ class _ScenarioCard extends StatelessWidget {
         title: Row(
           children: [
             Expanded(child: Text(scenarioLabel(type))),
-            if (isBest) Icon(Icons.star, size: 18, color: theme.colorScheme.primary),
+            if (type == ScenarioType.bleiben)
+              _Chip(label: 'Referenz', color: theme.colorScheme.outline)
+            else if (isBest)
+              Icon(Icons.star, size: 18, color: theme.colorScheme.primary),
           ],
         ),
         subtitle: Column(
@@ -154,7 +157,13 @@ class _ScenarioCard extends StatelessWidget {
           children: [
             Text(euroFromCents(scenario.cumulativeNetCents),
                 style: theme.textTheme.titleMedium),
-            if (type != ScenarioType.bleiben)
+            if (type == ScenarioType.bleiben)
+              Text(
+                'Ausgangswert (volles Gehalt) – dient nur als Vergleichsmaßstab.',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              )
+            else
               Text(
                 '${signedEuroFromCents(delta)} gegenüber „Bleiben"',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -178,6 +187,30 @@ class _ScenarioCard extends StatelessWidget {
         ),
         trailing: const Icon(Icons.chevron_right),
       ),
+    );
+  }
+}
+
+/// Small outlined pill used to mark the reference (baseline) scenario.
+class _Chip extends StatelessWidget {
+  const _Chip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(label,
+          style: Theme.of(context)
+              .textTheme
+              .labelSmall
+              ?.copyWith(color: color)),
     );
   }
 }

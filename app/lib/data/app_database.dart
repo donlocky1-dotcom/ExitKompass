@@ -39,6 +39,12 @@ class WizardStates extends Table {
   IntColumn get monthlyExpensesEuro => integer().withDefault(const Constant(2500))();
   IntColumn get savingsEuro => integer().withDefault(const Constant(10000))();
 
+  /// Added in schema v5. Termination agreement anticipates a lawful
+  /// operational dismissal (drives the S2 Sperrzeit expectation). Default
+  /// false keeps existing rows valid.
+  BoolColumn get anticipatesOperationalDismissal =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -59,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'exitkompass'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -73,6 +79,10 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(workbookAnswers);
+          }
+          if (from < 5) {
+            await m.addColumn(
+                wizardStates, wizardStates.anticipatesOperationalDismissal);
           }
         },
       );

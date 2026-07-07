@@ -41,6 +41,7 @@ void main() {
       exitDate: DateTime(2026, 6, 30),
       paidRelease: true,
       settlementsEuro: 3000,
+      anticipatesOperationalDismissal: true,
       horizonMonths: 36,
       kuendigungsArt: KuendigungsArt.betriebsbedingt,
       monthlyExpensesEuro: 3200,
@@ -69,6 +70,8 @@ void main() {
     expect(loaded.exitDate, original.exitDate);
     expect(loaded.paidRelease, original.paidRelease);
     expect(loaded.settlementsEuro, original.settlementsEuro);
+    expect(loaded.anticipatesOperationalDismissal,
+        original.anticipatesOperationalDismissal);
     expect(loaded.horizonMonths, original.horizonMonths);
     expect(loaded.kuendigungsArt, original.kuendigungsArt);
     expect(loaded.monthlyExpensesEuro, original.monthlyExpensesEuro);
@@ -111,10 +114,12 @@ void main() {
     await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN kuendigungs_art');
     await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN monthly_expenses_euro');
     await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN savings_euro');
+    await raw.customStatement(
+        'ALTER TABLE wizard_states DROP COLUMN anticipates_operational_dismissal');
     await raw.customStatement('PRAGMA user_version = 1');
     await raw.close();
 
-    // 3) Reopen → onUpgrade(1→3) re-adds all columns with their defaults.
+    // 3) Reopen → onUpgrade(1→5) re-adds all columns with their defaults.
     final upgraded = AppDatabase(NativeDatabase(file));
     final loaded = await WizardRepository(upgraded).load();
     expect(loaded, isNotNull);
@@ -122,6 +127,7 @@ void main() {
     expect(loaded.kuendigungsArt, KuendigungsArt.unbekannt);
     expect(loaded.monthlyExpensesEuro, 2500, reason: 'v3 default');
     expect(loaded.savingsEuro, 10000, reason: 'v3 default');
+    expect(loaded.anticipatesOperationalDismissal, isFalse, reason: 'v5 default');
     await upgraded.close();
   });
 
@@ -140,14 +146,16 @@ void main() {
     ));
     await current.close();
 
-    // 2) Downgrade to v2: drop only the v3 columns, keep kuendigungs_art.
+    // 2) Downgrade to v2: drop the columns added after v2, keep kuendigungs_art.
     final raw = AppDatabase(NativeDatabase(file));
     await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN monthly_expenses_euro');
     await raw.customStatement('ALTER TABLE wizard_states DROP COLUMN savings_euro');
+    await raw.customStatement(
+        'ALTER TABLE wizard_states DROP COLUMN anticipates_operational_dismissal');
     await raw.customStatement('PRAGMA user_version = 2');
     await raw.close();
 
-    // 3) Reopen → onUpgrade(2→3) adds the bridge columns; other data stays.
+    // 3) Reopen → onUpgrade(2→5) adds the bridge + v5 columns; other data stays.
     final upgraded = AppDatabase(NativeDatabase(file));
     final loaded = await WizardRepository(upgraded).load();
     expect(loaded, isNotNull);
@@ -156,6 +164,7 @@ void main() {
         reason: 'v2 column untouched');
     expect(loaded.monthlyExpensesEuro, 2500, reason: 're-added v3 default');
     expect(loaded.savingsEuro, 10000, reason: 're-added v3 default');
+    expect(loaded.anticipatesOperationalDismissal, isFalse, reason: 'v5 default');
     await upgraded.close();
   });
 
