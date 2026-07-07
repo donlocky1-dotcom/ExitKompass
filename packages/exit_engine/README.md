@@ -271,6 +271,24 @@ print(k.totalAfterCreditCents);                 // 150000 × 24
 print(k.exceedsMaxDuration);                    // false (≤ 24 Monate)
 ```
 
+## M10 – Resturlaubs-Abgeltung (§ 7 Abs. 4 BUrlG)
+
+Wert eines Urlaubstags nach dem 13-Wochen-Verdienst (§ 11 BUrlG) und
+Abgeltung offener Tage; dazu der anteilige Jahresanspruch (§ 5 BUrlG).
+Orientierung, keine Rechtsberatung (ASSUMPTIONS A16).
+
+```dart
+final u = vacationCompensation(
+  monthlyGrossCents: 500000, // 5.000 €/Monat
+  remainingDays: 10,
+  workDaysPerWeek: 5,
+);
+print(u.dailyValueCents);   // 23077  (5000 × 3 / 65 = 230,77 €)
+print(u.totalCents);        // 230770 (10 Tage)
+
+print(proRataVacationDays(fullYearDays: 30, monthsEmployed: 7)); // 18
+```
+
 ## Parameter aktualisieren
 
 `lib/params/params_2026.json` ist die Quelle der Wahrheit. Nach

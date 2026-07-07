@@ -63,7 +63,8 @@ void main() {
 
     await tester.tap(find.text('Ratgeber'));
     await tester.pumpAndSettle();
-    expect(find.text('Verhandlung'), findsWidgets);
+    // The Ratgeber opens with its "Werkzeuge" section at the top.
+    expect(find.text('Werkzeuge'), findsOneWidget);
   });
 
   test('default wizard data computes a full aggregate result', () {

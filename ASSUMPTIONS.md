@@ -410,6 +410,22 @@ nachvertraglichen Wettbewerbsverbots.
   und die steuer-/sv-rechtliche Behandlung der Entschädigung sind nicht
   abgebildet. Orientierung, ausdrücklich „keine Rechtsberatung".
 
+## A16 – M10 Resturlaubs-Abgeltung (§ 7 Abs. 4 BUrlG)
+
+Neues Engine-Modul + Ratgeber-Rechner.
+
+- **A16.1 Tageswert-Formel:** `Monatsbrutto × 3 / (13 × Arbeitstage/Woche)`.
+  Das entspricht dem 13-Wochen-Durchschnitt des § 11 BUrlG **bei konstantem
+  Monatsgehalt**; schwankende/variable Bezüge (Provisionen, Zuschläge) sind
+  nicht gemittelt und müssten separat berücksichtigt werden.
+- **A16.2 Anteiliger Anspruch (§ 5 BUrlG):** `Vollurlaub × Monate / 12`,
+  Bruchteile ab einem halben Tag aufgerundet (§ 5 Abs. 2). Die Unterscheidung
+  Voll-/Teilurlaub (Wartezeit § 4, erste Jahreshälfte etc.) ist bewusst nicht
+  abgebildet – reine Anteilsrechnung als Orientierung.
+- **A16.3 Nur brutto:** Die Abgeltung ist steuer- und sozialabgabenpflichtig;
+  der Rechner weist den **Bruttowert** aus. Der gesetzliche Mindesturlaub
+  (20 Tage bei 5-Tage-Woche, § 3 BUrlG) wird als Hinweis genannt.
+
 ## A6 – Sprach- und Historien-Migration (2026-07-05)
 
 Die Engine wurde ursprünglich mit deutschen Bezeichnern, Kommentaren und

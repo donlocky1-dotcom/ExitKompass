@@ -31,8 +31,9 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
   Einzelfallberatung (siehe ASSUMPTIONS.md A8). Werkzeuge: **Zeugnis-Decoder**
   (Zeugnissprache → Klartext/Schulnote, § 109 GewO, ASSUMPTIONS A13) und
   **Bewerbungstraining** (Interview-Fragen & Gehaltsverhandlung, lokal/ohne
-  Cloud-KI, ASSUMPTIONS A14) und **Karenzentschädigung**-Rechner
-  (Wettbewerbsverbot §§ 74 ff. HGB, ASSUMPTIONS A15)
+  Cloud-KI, ASSUMPTIONS A14), **Karenzentschädigung**-Rechner
+  (Wettbewerbsverbot §§ 74 ff. HGB, ASSUMPTIONS A15) und
+  **Resturlaubs-Abgeltung**-Rechner (§ 7 BUrlG, ASSUMPTIONS A16)
 - PDF-Dossier: „Entscheidungs-Dossier" (Eingaben, Szenario-Vergleich,
   Hinweise, Verhandlungs-Bandbreite, Fristen, „Passende Hilfe", Disclaimer)
   via Teilen-Button; eingebettete DejaVu-Schrift für korrekte

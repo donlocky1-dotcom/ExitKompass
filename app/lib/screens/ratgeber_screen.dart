@@ -6,6 +6,7 @@ import '../widgets/disclaimer_footer.dart';
 import '../widgets/help_panel.dart';
 import 'bewerbung_screen.dart';
 import 'non_compete_screen.dart';
+import 'vacation_screen.dart';
 import 'zeugnis_decoder_screen.dart';
 
 /// Ratgeber tab: articles grouped by category (spec §2.1 knowledge
@@ -62,6 +63,18 @@ class RatgeberTab extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const NonCompeteScreen()),
+            ),
+          ),
+        ),
+        Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            leading: const Icon(Icons.beach_access_outlined),
+            title: const Text('Resturlaub abgelten'),
+            subtitle: const Text('Offene Urlaubstage auszahlen (§ 7 BUrlG)'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const VacationScreen()),
             ),
           ),
         ),
