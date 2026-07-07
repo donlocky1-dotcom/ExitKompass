@@ -9,6 +9,7 @@
 /// * M6 – severance amount estimate (`m6_severance_estimate.dart`)
 /// * M7 – liquidity / bridge planner (`m7_bridge_plan.dart`)
 /// * M8 – severance payout timing (`m8_severance_timing.dart`)
+/// * M9 – non-compete compensation / Karenzentschädigung (`m9_non_compete.dart`)
 ///
 /// All monetary amounts are passed and returned as `int` values in
 /// **cents** unless documented otherwise.
@@ -22,6 +23,7 @@ export 'src/m5_scenarios.dart';
 export 'src/m6_severance_estimate.dart';
 export 'src/m7_bridge_plan.dart';
 export 'src/m8_severance_timing.dart';
+export 'src/m9_non_compete.dart';
 export 'src/money.dart';
 export 'src/net_income.dart';
 export 'src/params.dart';

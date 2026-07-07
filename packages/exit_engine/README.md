@@ -250,6 +250,27 @@ print(t.nextYearBetter);               // true → nächstes Jahr günstiger
 print(t.differenceCents);              // Differenz (Betrag)
 ```
 
+## M9 – Karenzentschädigung (§§ 74 ff. HGB)
+
+Berechnet die Entschädigung für ein nachvertragliches Wettbewerbsverbot:
+mindestens 50 % der zuletzt bezogenen Bezüge (§ 74 Abs. 2), Anrechnung
+anderweitigen Erwerbs über 110 % (bzw. 125 % bei erzwungenem Umzug, § 74c),
+Höchstdauer zwei Jahre (§ 74a). Orientierung, keine Rechtsberatung
+(ASSUMPTIONS A15).
+
+```dart
+final k = nonCompeteCompensation(
+  lastMonthlyBenefitsCents: 500000,   // 5.000 €/Monat
+  durationMonths: 24,
+  otherMonthlyIncomeCents: 400000,    // 4.000 €/Monat Neuverdienst
+);
+print(k.minMonthlyCompensationCents);           // 250000 (50 %)
+print(k.creditPerMonthCents);                   // 100000 (§ 74c-Anrechnung)
+print(k.monthlyCompensationAfterCreditCents);   // 150000
+print(k.totalAfterCreditCents);                 // 150000 × 24
+print(k.exceedsMaxDuration);                    // false (≤ 24 Monate)
+```
+
 ## Parameter aktualisieren
 
 `lib/params/params_2026.json` ist die Quelle der Wahrheit. Nach

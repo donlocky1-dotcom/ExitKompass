@@ -5,6 +5,7 @@ import '../content/ratgeber_content.dart';
 import '../widgets/disclaimer_footer.dart';
 import '../widgets/help_panel.dart';
 import 'bewerbung_screen.dart';
+import 'non_compete_screen.dart';
 import 'zeugnis_decoder_screen.dart';
 
 /// Ratgeber tab: articles grouped by category (spec §2.1 knowledge
@@ -49,6 +50,18 @@ class RatgeberTab extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const BewerbungScreen()),
+            ),
+          ),
+        ),
+        Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            leading: const Icon(Icons.gavel_outlined),
+            title: const Text('Karenzentschädigung'),
+            subtitle: const Text('Wettbewerbsverbot: was steht dir zu? (§§ 74 ff. HGB)'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const NonCompeteScreen()),
             ),
           ),
         ),

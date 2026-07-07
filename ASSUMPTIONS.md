@@ -390,6 +390,26 @@ Kündigung/Lücke erklären, Gehaltsverhandlung) mit STAR-Methode.
   `bewerbungReviewedOn`; ein Content-Test sichert Frage + Antwort-Gerüst je
   Eintrag und alle drei Kategorien.
 
+## A15 – M9 Karenzentschädigung (§§ 74 ff. HGB)
+
+Neues Engine-Modul + Ratgeber-Rechner für die Entschädigung eines
+nachvertraglichen Wettbewerbsverbots.
+
+- **A15.1 Gesetzliche Eckwerte:** Mindestens 50 % der zuletzt bezogenen
+  vertragsmäßigen Leistungen je Verbotsjahr (§ 74 Abs. 2); Höchstdauer zwei
+  Jahre (§ 74a Abs. 1); Anrechnung anderweitigen Erwerbs, soweit
+  Entschädigung + Erwerb die letzten Bezüge um mehr als 1/10 (110 %) bzw.
+  bei erzwungenem Umzug um mehr als 1/4 (125 %) übersteigen (§ 74c).
+- **A15.2 „Bezüge" vereinfacht:** Als Bemessungsgröße dient eine einzige
+  Monats-Eingabe „letzte Bezüge". Die genaue Zusammensetzung der
+  „vertragsmäßigen Leistungen" (Grundgehalt + regelmäßige variable Anteile,
+  Sachbezüge wie Dienstwagen, Durchschnittsbildung bei schwankenden Bezügen)
+  bleibt dem Nutzer/der Beratung überlassen.
+- **A15.3 Anrechnung als Monatsgröße:** Der § 74c-Vergleich rechnet je Monat
+  (Entschädigung, Neuverdienst, Schwelle). „Böswillig unterlassener" Erwerb
+  und die steuer-/sv-rechtliche Behandlung der Entschädigung sind nicht
+  abgebildet. Orientierung, ausdrücklich „keine Rechtsberatung".
+
 ## A6 – Sprach- und Historien-Migration (2026-07-05)
 
 Die Engine wurde ursprünglich mit deutschen Bezeichnern, Kommentaren und
