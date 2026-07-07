@@ -1327,15 +1327,237 @@ class WizardStatesCompanion extends UpdateCompanion<WizardState> {
   }
 }
 
+class $WorkbookAnswersTable extends WorkbookAnswers
+    with TableInfo<$WorkbookAnswersTable, WorkbookAnswer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WorkbookAnswersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _questionIdMeta = const VerificationMeta(
+    'questionId',
+  );
+  @override
+  late final GeneratedColumn<String> questionId = GeneratedColumn<String>(
+    'question_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _answerMeta = const VerificationMeta('answer');
+  @override
+  late final GeneratedColumn<String> answer = GeneratedColumn<String>(
+    'answer',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [questionId, answer];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'workbook_answers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WorkbookAnswer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('question_id')) {
+      context.handle(
+        _questionIdMeta,
+        questionId.isAcceptableOrUnknown(data['question_id']!, _questionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_questionIdMeta);
+    }
+    if (data.containsKey('answer')) {
+      context.handle(
+        _answerMeta,
+        answer.isAcceptableOrUnknown(data['answer']!, _answerMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {questionId};
+  @override
+  WorkbookAnswer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WorkbookAnswer(
+      questionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}question_id'],
+      )!,
+      answer: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}answer'],
+      )!,
+    );
+  }
+
+  @override
+  $WorkbookAnswersTable createAlias(String alias) {
+    return $WorkbookAnswersTable(attachedDatabase, alias);
+  }
+}
+
+class WorkbookAnswer extends DataClass implements Insertable<WorkbookAnswer> {
+  final String questionId;
+  final String answer;
+  const WorkbookAnswer({required this.questionId, required this.answer});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['question_id'] = Variable<String>(questionId);
+    map['answer'] = Variable<String>(answer);
+    return map;
+  }
+
+  WorkbookAnswersCompanion toCompanion(bool nullToAbsent) {
+    return WorkbookAnswersCompanion(
+      questionId: Value(questionId),
+      answer: Value(answer),
+    );
+  }
+
+  factory WorkbookAnswer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WorkbookAnswer(
+      questionId: serializer.fromJson<String>(json['questionId']),
+      answer: serializer.fromJson<String>(json['answer']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'questionId': serializer.toJson<String>(questionId),
+      'answer': serializer.toJson<String>(answer),
+    };
+  }
+
+  WorkbookAnswer copyWith({String? questionId, String? answer}) =>
+      WorkbookAnswer(
+        questionId: questionId ?? this.questionId,
+        answer: answer ?? this.answer,
+      );
+  WorkbookAnswer copyWithCompanion(WorkbookAnswersCompanion data) {
+    return WorkbookAnswer(
+      questionId: data.questionId.present
+          ? data.questionId.value
+          : this.questionId,
+      answer: data.answer.present ? data.answer.value : this.answer,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkbookAnswer(')
+          ..write('questionId: $questionId, ')
+          ..write('answer: $answer')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(questionId, answer);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WorkbookAnswer &&
+          other.questionId == this.questionId &&
+          other.answer == this.answer);
+}
+
+class WorkbookAnswersCompanion extends UpdateCompanion<WorkbookAnswer> {
+  final Value<String> questionId;
+  final Value<String> answer;
+  final Value<int> rowid;
+  const WorkbookAnswersCompanion({
+    this.questionId = const Value.absent(),
+    this.answer = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WorkbookAnswersCompanion.insert({
+    required String questionId,
+    this.answer = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : questionId = Value(questionId);
+  static Insertable<WorkbookAnswer> custom({
+    Expression<String>? questionId,
+    Expression<String>? answer,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (questionId != null) 'question_id': questionId,
+      if (answer != null) 'answer': answer,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WorkbookAnswersCompanion copyWith({
+    Value<String>? questionId,
+    Value<String>? answer,
+    Value<int>? rowid,
+  }) {
+    return WorkbookAnswersCompanion(
+      questionId: questionId ?? this.questionId,
+      answer: answer ?? this.answer,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (questionId.present) {
+      map['question_id'] = Variable<String>(questionId.value);
+    }
+    if (answer.present) {
+      map['answer'] = Variable<String>(answer.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkbookAnswersCompanion(')
+          ..write('questionId: $questionId, ')
+          ..write('answer: $answer, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $WizardStatesTable wizardStates = $WizardStatesTable(this);
+  late final $WorkbookAnswersTable workbookAnswers = $WorkbookAnswersTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [wizardStates];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    wizardStates,
+    workbookAnswers,
+  ];
 }
 
 typedef $$WizardStatesTableCreateCompanionBuilder =
@@ -1907,10 +2129,163 @@ typedef $$WizardStatesTableProcessedTableManager =
       WizardState,
       PrefetchHooks Function()
     >;
+typedef $$WorkbookAnswersTableCreateCompanionBuilder =
+    WorkbookAnswersCompanion Function({
+      required String questionId,
+      Value<String> answer,
+      Value<int> rowid,
+    });
+typedef $$WorkbookAnswersTableUpdateCompanionBuilder =
+    WorkbookAnswersCompanion Function({
+      Value<String> questionId,
+      Value<String> answer,
+      Value<int> rowid,
+    });
+
+class $$WorkbookAnswersTableFilterComposer
+    extends Composer<_$AppDatabase, $WorkbookAnswersTable> {
+  $$WorkbookAnswersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get questionId => $composableBuilder(
+    column: $table.questionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get answer => $composableBuilder(
+    column: $table.answer,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WorkbookAnswersTableOrderingComposer
+    extends Composer<_$AppDatabase, $WorkbookAnswersTable> {
+  $$WorkbookAnswersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get questionId => $composableBuilder(
+    column: $table.questionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get answer => $composableBuilder(
+    column: $table.answer,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WorkbookAnswersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WorkbookAnswersTable> {
+  $$WorkbookAnswersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get questionId => $composableBuilder(
+    column: $table.questionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get answer =>
+      $composableBuilder(column: $table.answer, builder: (column) => column);
+}
+
+class $$WorkbookAnswersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WorkbookAnswersTable,
+          WorkbookAnswer,
+          $$WorkbookAnswersTableFilterComposer,
+          $$WorkbookAnswersTableOrderingComposer,
+          $$WorkbookAnswersTableAnnotationComposer,
+          $$WorkbookAnswersTableCreateCompanionBuilder,
+          $$WorkbookAnswersTableUpdateCompanionBuilder,
+          (
+            WorkbookAnswer,
+            BaseReferences<
+              _$AppDatabase,
+              $WorkbookAnswersTable,
+              WorkbookAnswer
+            >,
+          ),
+          WorkbookAnswer,
+          PrefetchHooks Function()
+        > {
+  $$WorkbookAnswersTableTableManager(
+    _$AppDatabase db,
+    $WorkbookAnswersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WorkbookAnswersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WorkbookAnswersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WorkbookAnswersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> questionId = const Value.absent(),
+                Value<String> answer = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WorkbookAnswersCompanion(
+                questionId: questionId,
+                answer: answer,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String questionId,
+                Value<String> answer = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WorkbookAnswersCompanion.insert(
+                questionId: questionId,
+                answer: answer,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WorkbookAnswersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WorkbookAnswersTable,
+      WorkbookAnswer,
+      $$WorkbookAnswersTableFilterComposer,
+      $$WorkbookAnswersTableOrderingComposer,
+      $$WorkbookAnswersTableAnnotationComposer,
+      $$WorkbookAnswersTableCreateCompanionBuilder,
+      $$WorkbookAnswersTableUpdateCompanionBuilder,
+      (
+        WorkbookAnswer,
+        BaseReferences<_$AppDatabase, $WorkbookAnswersTable, WorkbookAnswer>,
+      ),
+      WorkbookAnswer,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$WizardStatesTableTableManager get wizardStates =>
       $$WizardStatesTableTableManager(_db, _db.wizardStates);
+  $$WorkbookAnswersTableTableManager get workbookAnswers =>
+      $$WorkbookAnswersTableTableManager(_db, _db.workbookAnswers);
 }

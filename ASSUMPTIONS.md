@@ -400,6 +400,13 @@ Kündigung/Lücke erklären, Gehaltsverhandlung) mit STAR-Methode.
 - **A14.4 Brainteaser & Case-Fragen:** Zusätzlich ein kurzer Leitfaden
   (`brainteaserIntro` + `brainteaserSteps`): Rückfragen stellen, laut denken,
   Schritt für Schritt erklären – der Weg zählt mehr als die Zahl.
+- **A14.5 Workbook („Create your best shot"):** Zu jeder Interview-Frage kann
+  der Nutzer eine **eigene Antwort** schreiben; sie wird lokal via Drift
+  gespeichert (neue Tabelle `workbook_answers`, **Schema-Migration v3 → v4**
+  legt sie per `createTable` an – bestehende Profile bleiben unberührt).
+  Schlüssel ist die stabile Frage-`id` (= Fragetext, Eindeutigkeit per Test
+  abgesichert); leere Antworten werden gelöscht. „Daten löschen" (§13) räumt
+  auch das Workbook mit ab. Bleibt 100 % lokal – kein Cloud-Sync (A14.1).
 
 ## A15 – M9 Karenzentschädigung (§§ 74 ff. HGB)
 

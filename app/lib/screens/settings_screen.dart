@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/wizard.dart';
+import '../state/workbook.dart';
 import '../widgets/disclaimer_footer.dart';
 
 /// Settings screen (spec §4 screen 13, §9): parameter year, legal notes,
@@ -41,6 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (confirmed != true) return;
     await ref.read(wizardProvider.notifier).clearSaved();
+    await ref.read(workbookProvider.notifier).clearSaved();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Gespeicherte Daten wurden gelöscht.')),

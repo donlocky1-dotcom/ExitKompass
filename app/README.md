@@ -31,7 +31,8 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
   Einzelfallberatung (siehe ASSUMPTIONS.md A8). Werkzeuge: **Zeugnis-Decoder**
   (Zeugnissprache → Klartext/Schulnote, § 109 GewO, ASSUMPTIONS A13) und
   **Bewerbungstraining** (Value-Selling-Grundhaltung, Fangfragen, eigene
-  Fragen, Gehaltsverhandlung – lokal/ohne Cloud-KI, ASSUMPTIONS A14), **Karenzentschädigung**-Rechner
+  Fragen, Gehaltsverhandlung, Brainteaser-Leitfaden und ein **Workbook** mit
+  eigenen, lokal gespeicherten Antworten – ohne Cloud-KI, ASSUMPTIONS A14), **Karenzentschädigung**-Rechner
   (Wettbewerbsverbot §§ 74 ff. HGB, ASSUMPTIONS A15) und
   **Resturlaubs-Abgeltung**-Rechner (§ 7 BUrlG, ASSUMPTIONS A16)
 - PDF-Dossier: „Entscheidungs-Dossier" (Eingaben, Szenario-Vergleich,
@@ -45,8 +46,8 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
 - State: Riverpod; Eingaben werden lokal via Drift (SQLite) gespeichert
   und beim Start wiederhergestellt (Szenario-Ergebnisse bleiben
   in-memory, Spec §6). Schema-Migrationen laufen automatisch
-  (v2: `kuendigungs_art`; v3: `monthly_expenses_euro` + `savings_euro`) und
-  erhalten bereits gespeicherte Profile.
+  (v2: `kuendigungs_art`; v3: `monthly_expenses_euro` + `savings_euro`;
+  v4: Tabelle `workbook_answers`) und erhalten bereits gespeicherte Profile.
 
 Noch offen (Woche 5–6): RevenueCat/Paywall, lokale Push-Erinnerungen
 für die Fristen.

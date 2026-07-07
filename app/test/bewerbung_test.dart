@@ -1,10 +1,16 @@
 import 'package:exitkompass_app/content/bewerbung.dart';
 import 'package:exitkompass_app/screens/bewerbung_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Bewerbung content integrity', () {
+    test('question ids (texts) are unique', () {
+      final ids = interviewQuestions.map((q) => q.id).toList();
+      expect(ids.toSet(), hasLength(ids.length));
+    });
+
     test('every question has an approach', () {
       for (final q in interviewQuestions) {
         expect(q.question, isNotEmpty);
@@ -47,16 +53,20 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MaterialApp(home: BewerbungScreen()));
+    await tester.pumpWidget(const ProviderScope(
+      child: MaterialApp(home: BewerbungScreen()),
+    ));
     await tester.pumpAndSettle();
 
     expect(find.text('Die STAR-Methode'), findsOneWidget);
     expect(find.text('Grundhaltung: Verkauf dich über deinen Wert'), findsOneWidget);
     expect(find.text('Fragen, die DU stellst'), findsOneWidget);
 
-    // Expand a question to reveal its "So gehst du ran" block.
+    // Expand a question to reveal its "So gehst du ran" block and the
+    // persisted workbook answer field.
     await tester.tap(find.textContaining('Erzählen Sie etwas über sich'));
     await tester.pumpAndSettle();
     expect(find.text('So gehst du ran'), findsWidgets);
+    expect(find.text('Deine Antwort (wird lokal gespeichert)'), findsWidgets);
   });
 }

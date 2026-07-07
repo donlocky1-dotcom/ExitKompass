@@ -85,6 +85,11 @@ class InterviewQuestion {
 
   /// Short, concrete do's.
   final List<String> tips;
+
+  /// Stable key for persisting the user's own workbook answer. The question
+  /// text is unique across the bank (guarded by a test), so it serves as a
+  /// deterministic id without a separate field to maintain.
+  String get id => question;
 }
 
 /// Intro for the brainteaser / case-question section.

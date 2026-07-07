@@ -43,13 +43,23 @@ class WizardStates extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [WizardStates])
+/// The user's own answers in the Bewerbungstraining workbook, keyed by the
+/// interview question's stable id. Added in schema v4.
+class WorkbookAnswers extends Table {
+  TextColumn get questionId => text()();
+  TextColumn get answer => text().withDefault(const Constant(''))();
+
+  @override
+  Set<Column> get primaryKey => {questionId};
+}
+
+@DriftDatabase(tables: [WizardStates, WorkbookAnswers])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
       : super(executor ?? driftDatabase(name: 'exitkompass'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -60,6 +70,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await m.addColumn(wizardStates, wizardStates.monthlyExpensesEuro);
             await m.addColumn(wizardStates, wizardStates.savingsEuro);
+          }
+          if (from < 4) {
+            await m.createTable(workbookAnswers);
           }
         },
       );

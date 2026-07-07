@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../content/bewerbung.dart';
+import '../state/workbook.dart';
 import '../widgets/disclaimer_footer.dart';
 
 /// On-device interview preparation: STAR method + a question bank grouped by
@@ -137,8 +139,54 @@ class _QuestionTile extends StatelessWidget {
                 ),
               ),
           ],
+          const SizedBox(height: 12),
+          _WorkbookField(questionId: question.id),
         ],
       ),
+    );
+  }
+}
+
+/// Persisted "your own answer" field (workbook). Saves on change; syncs
+/// external resets (e.g. "Daten löschen") when not focused.
+class _WorkbookField extends ConsumerStatefulWidget {
+  const _WorkbookField({required this.questionId});
+
+  final String questionId;
+
+  @override
+  ConsumerState<_WorkbookField> createState() => _WorkbookFieldState();
+}
+
+class _WorkbookFieldState extends ConsumerState<_WorkbookField> {
+  late final TextEditingController _controller = TextEditingController(
+      text: ref.read(workbookProvider)[widget.questionId] ?? '');
+  final FocusNode _focus = FocusNode();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = ref.watch(workbookProvider)[widget.questionId] ?? '';
+    if (!_focus.hasFocus && _controller.text != saved) {
+      _controller.text = saved;
+    }
+    return TextField(
+      controller: _controller,
+      focusNode: _focus,
+      minLines: 2,
+      maxLines: 5,
+      decoration: const InputDecoration(
+        labelText: 'Deine Antwort (wird lokal gespeichert)',
+        alignLabelWithHint: true,
+      ),
+      onChanged: (t) =>
+          ref.read(workbookProvider.notifier).setAnswer(widget.questionId, t),
     );
   }
 }

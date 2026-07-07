@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'data/app_database.dart';
 import 'data/wizard_repository.dart';
+import 'data/workbook_repository.dart';
 import 'screens/onboarding_screen.dart';
 import 'state/wizard.dart';
+import 'state/workbook.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,12 +15,17 @@ Future<void> main() async {
   final db = AppDatabase();
   final repository = WizardRepository(db);
   final saved = await repository.load();
+  final workbookRepo = WorkbookRepository(db);
+  final savedAnswers = await workbookRepo.loadAll();
 
   runApp(
     ProviderScope(
       overrides: [
         wizardProvider.overrideWith(
           (ref) => WizardController(repository: repository, initial: saved),
+        ),
+        workbookProvider.overrideWith(
+          (ref) => WorkbookController(repository: workbookRepo, initial: savedAnswers),
         ),
       ],
       child: const ExitKompassApp(),
