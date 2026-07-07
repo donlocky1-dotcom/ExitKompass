@@ -406,7 +406,14 @@ Kündigung/Lücke erklären, Gehaltsverhandlung) mit STAR-Methode.
   legt sie per `createTable` an – bestehende Profile bleiben unberührt).
   Schlüssel ist die stabile Frage-`id` (= Fragetext, Eindeutigkeit per Test
   abgesichert); leere Antworten werden gelöscht. „Daten löschen" (§13) räumt
-  auch das Workbook mit ab. Bleibt 100 % lokal – kein Cloud-Sync (A14.1).
+  auch das Workbook mit ab. Bleibt 100 % lokal – kein Cloud-Sync (A14.1). Die
+  Antworten sind jederzeit weiter bearbeitbar (Autosave beim Tippen).
+- **A14.6 Workbook-PDF-Export (leer & ausgefüllt):** `buildWorkbookPdf(answers,
+  empty)` erzeugt das Workbook als PDF – **leer** (Schreiblinien je Frage) zum
+  Ausdrucken und Offline-Ausfüllen oder **ausgefüllt** mit den gespeicherten
+  Antworten. Gleiche eingebettete DejaVu-Schrift wie das Dossier (korrekte
+  €/„"/–-Darstellung). Reine, testbare Funktion; zwei Buttons teilen/drucken
+  über `Printing.sharePdf`.
 
 ## A15 – M9 Karenzentschädigung (§§ 74 ff. HGB)
 

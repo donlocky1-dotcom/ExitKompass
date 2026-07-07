@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:printing/printing.dart';
 
 import '../content/bewerbung.dart';
+import '../pdf/workbook_pdf.dart';
 import '../state/workbook.dart';
 import '../widgets/disclaimer_footer.dart';
 
@@ -35,6 +38,8 @@ class BewerbungScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                const _WorkbookExport(),
                 const SizedBox(height: 8),
                 Text('Grundhaltung: Verkauf dich über deinen Wert',
                     style: theme.textTheme.titleMedium),
@@ -142,6 +147,65 @@ class _QuestionTile extends StatelessWidget {
           const SizedBox(height: 12),
           _WorkbookField(questionId: question.id),
         ],
+      ),
+    );
+  }
+}
+
+/// Two export buttons: a blank workbook (to print and fill in offline) and a
+/// filled workbook (with the saved answers).
+class _WorkbookExport extends ConsumerWidget {
+  const _WorkbookExport();
+
+  Future<void> _share(WidgetRef ref, {required bool empty}) async {
+    final answers = ref.read(workbookProvider);
+    final bytes = await buildWorkbookPdf(
+      answers: answers,
+      empty: empty,
+      regularTtf: await rootBundle.load('assets/fonts/DejaVuSans.ttf'),
+      boldTtf: await rootBundle.load('assets/fonts/DejaVuSans-Bold.ttf'),
+    );
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: empty ? 'workbook-leer.pdf' : 'workbook-ausgefuellt.pdf',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Workbook als PDF', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 2),
+            Text(
+              'Leer zum Ausdrucken und offline Ausfüllen – oder ausgefüllt mit '
+              'deinen gespeicherten Antworten.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.description_outlined, size: 18),
+                  label: const Text('Leeres Workbook'),
+                  onPressed: () => _share(ref, empty: true),
+                ),
+                FilledButton.tonalIcon(
+                  icon: const Icon(Icons.download, size: 18),
+                  label: const Text('Ausgefülltes Workbook'),
+                  onPressed: () => _share(ref, empty: false),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

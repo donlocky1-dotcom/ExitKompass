@@ -32,7 +32,8 @@ Flutter-App des ExitKompass (iOS + Android). Baut auf dem reinen Dart-Package
   (Zeugnissprache → Klartext/Schulnote, § 109 GewO, ASSUMPTIONS A13) und
   **Bewerbungstraining** (Value-Selling-Grundhaltung, Fangfragen, eigene
   Fragen, Gehaltsverhandlung, Brainteaser-Leitfaden und ein **Workbook** mit
-  eigenen, lokal gespeicherten Antworten – ohne Cloud-KI, ASSUMPTIONS A14), **Karenzentschädigung**-Rechner
+  eigenen, lokal gespeicherten Antworten – ohne Cloud-KI; Export als PDF
+  (leer zum Ausdrucken oder ausgefüllt), ASSUMPTIONS A14), **Karenzentschädigung**-Rechner
   (Wettbewerbsverbot §§ 74 ff. HGB, ASSUMPTIONS A15) und
   **Resturlaubs-Abgeltung**-Rechner (§ 7 BUrlG, ASSUMPTIONS A16)
 - PDF-Dossier: „Entscheidungs-Dossier" (Eingaben, Szenario-Vergleich,

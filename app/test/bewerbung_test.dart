@@ -59,6 +59,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Die STAR-Methode'), findsOneWidget);
+    expect(find.text('Workbook als PDF'), findsOneWidget);
+    expect(find.text('Leeres Workbook'), findsOneWidget);
+    expect(find.text('Ausgefülltes Workbook'), findsOneWidget);
     expect(find.text('Grundhaltung: Verkauf dich über deinen Wert'), findsOneWidget);
     expect(find.text('Fragen, die DU stellst'), findsOneWidget);
 
