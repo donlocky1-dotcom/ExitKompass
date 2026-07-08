@@ -107,7 +107,7 @@ export default {
       `?key=${env.GEMINI_API_KEY}`;
 
     const gemReq = {
-      system_instruction: { parts: [{ text: SYSTEM_PROMPTS[mode] }] },
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[mode] }] },
       contents,
       generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
     };
@@ -119,10 +119,14 @@ export default {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(gemReq),
       });
-      if (!r.ok) return json({ error: 'upstream', status: r.status }, 502);
+      if (!r.ok) {
+        // TODO(temporary): surface the real Gemini error for diagnosis.
+        const detail = await r.text();
+        return json({ reply: `⚠️ Gemini ${r.status}: ${detail.slice(0, 400)}` });
+      }
       gem = await r.json();
-    } catch (_) {
-      return json({ error: 'upstream_unreachable' }, 502);
+    } catch (e) {
+      return json({ reply: `⚠️ Upstream nicht erreichbar: ${String(e).slice(0, 200)}` });
     }
 
     const reply =
