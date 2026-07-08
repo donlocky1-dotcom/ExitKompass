@@ -7,19 +7,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('MockCoachEngine', () {
-    test('opening poses the first interview question', () {
+    test('opening poses the first interview question and names the persona', () {
       final engine = MockCoachEngine();
-      expect(engine.opening(), contains('Willkommen zur Gesprächssimulation'));
+      final opening = engine.opening(CoachPersona.hart);
+      expect(opening, contains('Willkommen zur Gesprächssimulation'));
+      expect(opening, contains('hart'));
       expect(engine.label, isNotEmpty);
     });
 
     test('after an answer it gives a tip and the next question', () async {
       final engine = MockCoachEngine();
       final history = [
-        CoachMessage(CoachRole.coach, engine.opening()),
+        CoachMessage(CoachRole.coach, engine.opening(CoachPersona.neutral)),
         const CoachMessage(CoachRole.user, 'Meine Antwort.'),
       ];
-      final reply = await engine.reply(history);
+      final reply = await engine.reply(history, CoachPersona.neutral);
       expect(reply, contains('Tipp zu dieser Frage'));
       expect(reply, contains('Nächste Frage'));
     });

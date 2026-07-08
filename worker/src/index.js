@@ -98,6 +98,12 @@ export default {
 
     const mode = payload.mode === 'negotiation' ? 'negotiation' : 'interview';
     const messages = Array.isArray(payload.messages) ? payload.messages : [];
+    // Character/persona instruction supplied by the app (flavour only – the
+    // safety guardrails above always apply). Bounded to keep it in check.
+    const personaPrompt = String(payload.personaPrompt || '').slice(0, 600);
+    const systemText = personaPrompt
+      ? `${SYSTEM_PROMPTS[mode]}\n\nRolle/Charakter des Gegenübers: ${personaPrompt}`
+      : SYSTEM_PROMPTS[mode];
 
     const contents = messages
       .map((m) => ({
@@ -115,7 +121,7 @@ export default {
       `?key=${env.GEMINI_API_KEY}`;
 
     const gemReq = {
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[mode] }] },
+      systemInstruction: { parts: [{ text: systemText }] },
       contents,
       generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
     };

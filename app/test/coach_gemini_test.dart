@@ -24,13 +24,14 @@ void main() {
     );
 
     final reply = await engine.reply([
-      CoachMessage(CoachRole.coach, engine.opening()),
+      CoachMessage(CoachRole.coach, engine.opening(CoachPersona.hart)),
       const CoachMessage(CoachRole.user, 'Meine Antwort.'),
-    ]);
+    ], CoachPersona.hart);
 
     expect(reply, contains('Nächste Frage'));
     final body = jsonDecode(captured.body) as Map<String, dynamic>;
     expect(body['mode'], 'interview');
+    expect(body['personaPrompt'], contains('hart'));
     expect((body['messages'] as List).last['role'], 'user');
     expect(captured.headers['authorization'], 'Bearer user-123');
     expect(engine.label, 'Gemini Flash');
@@ -41,8 +42,8 @@ void main() {
         MockClient((req) async => http.Response('{"error":"not_entitled"}', 402));
     final engine =
         GeminiCoachEngine(endpoint: 'https://proxy.example/coach', client: client);
-    final reply =
-        await engine.reply([const CoachMessage(CoachRole.user, 'Hallo')]);
+    final reply = await engine.reply(
+        [const CoachMessage(CoachRole.user, 'Hallo')], CoachPersona.neutral);
     expect(reply, contains('Premium'));
   });
 }

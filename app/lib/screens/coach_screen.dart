@@ -19,6 +19,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
   bool _typing = false;
+  CoachPersona _persona = CoachPersona.neutral;
 
   CoachEngine get _engine => ref.read(coachEngineProvider);
 
@@ -39,10 +40,16 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     setState(() {
       _messages
         ..clear()
-        ..add(CoachMessage(CoachRole.coach, _engine.opening()));
+        ..add(CoachMessage(CoachRole.coach, _engine.opening(_persona)));
       _typing = false;
     });
     _controller.clear();
+  }
+
+  void _changePersona(CoachPersona p) {
+    if (p == _persona) return;
+    _persona = p;
+    _reset();
   }
 
   Future<void> _send() async {
@@ -55,7 +62,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     _controller.clear();
     _scrollToEnd();
 
-    final reply = await _engine.reply(List.unmodifiable(_messages));
+    final reply = await _engine.reply(List.unmodifiable(_messages), _persona);
     if (!mounted) return;
     setState(() {
       _messages.add(CoachMessage(CoachRole.coach, reply));
@@ -102,6 +109,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
       body: Column(
         children: [
           _DisclaimerBanner(aiPowered: _engine.isAiPowered),
+          _PersonaSelector(selected: _persona, onChanged: _changePersona),
           Expanded(
             child: ListView.builder(
               controller: _scroll,
@@ -140,6 +148,49 @@ class _DisclaimerBanner extends StatelessWidget {
       child: Text(text,
           style: theme.textTheme.bodySmall
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+    );
+  }
+}
+
+class _PersonaSelector extends StatelessWidget {
+  const _PersonaSelector({required this.selected, required this.onChanged});
+  final CoachPersona selected;
+  final ValueChanged<CoachPersona> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Text('Gesprächspartner:',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final p in CoachPersona.values)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(p.label),
+                        tooltip: p.description,
+                        selected: p == selected,
+                        onSelected: (_) => onChanged(p),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

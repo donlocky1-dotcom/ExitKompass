@@ -23,14 +23,15 @@ class MockCoachEngine implements CoachEngine {
   bool get isAiPowered => false;
 
   @override
-  String opening() =>
+  String opening(CoachPersona persona) =>
       'Willkommen zur Gesprächssimulation. Ich spiele die interviewende '
-      'Person – antworte einfach, wie du es im echten Gespräch tätest. '
-      'Am besten mit der STAR-Struktur (Situation · Aufgabe · Handlung · '
-      'Ergebnis).\n\nLos geht’s:\n${_questions.first.question}';
+      'Person (${persona.label.toLowerCase()}) – antworte einfach, wie du es '
+      'im echten Gespräch tätest. Am besten mit der STAR-Struktur '
+      '(Situation · Aufgabe · Handlung · Ergebnis).\n\nLos geht’s:\n'
+      '${_questions.first.question}';
 
   @override
-  Future<String> reply(List<CoachMessage> history) async {
+  Future<String> reply(List<CoachMessage> history, CoachPersona persona) async {
     // Small delay so the UI shows a natural "typing" beat.
     await Future<void>.delayed(const Duration(milliseconds: 500));
 

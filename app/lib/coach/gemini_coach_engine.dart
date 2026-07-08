@@ -36,14 +36,14 @@ class GeminiCoachEngine implements CoachEngine {
   bool get isAiPowered => true;
 
   @override
-  String opening() =>
+  String opening(CoachPersona persona) =>
       'Willkommen zur Gesprächssimulation. Ich spiele die interviewende '
-      'Person und stelle dir nacheinander Fragen. Antworte, wie du es im '
-      'echten Gespräch tätest – am besten mit der STAR-Struktur.\n\n'
-      'Los geht’s: Erzähl mir kurz etwas über dich.';
+      'Person (${persona.label.toLowerCase()}) und stelle dir nacheinander '
+      'Fragen. Antworte, wie du es im echten Gespräch tätest – am besten mit '
+      'der STAR-Struktur.\n\nLos geht’s: Erzähl mir kurz etwas über dich.';
 
   @override
-  Future<String> reply(List<CoachMessage> history) async {
+  Future<String> reply(List<CoachMessage> history, CoachPersona persona) async {
     final http.Response res;
     try {
       res = await _client.post(
@@ -55,6 +55,7 @@ class GeminiCoachEngine implements CoachEngine {
         },
         body: jsonEncode({
           'mode': 'interview',
+          'personaPrompt': persona.promptText,
           'messages': [
             for (final m in history)
               {'role': m.role == CoachRole.user ? 'user' : 'coach', 'text': m.text},
