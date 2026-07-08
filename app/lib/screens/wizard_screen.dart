@@ -62,27 +62,38 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
           Step(
             title: const Text('Situation'),
             isActive: _step >= 0,
-            content: _SituationStep(data: data),
+            content: _StepBody(child: _SituationStep(data: data)),
           ),
           Step(
             title: const Text('Person & Steuer'),
             isActive: _step >= 1,
-            content: _PersonStep(data: data),
+            content: _StepBody(child: _PersonStep(data: data)),
           ),
           Step(
             title: const Text('Job'),
             isActive: _step >= 2,
-            content: _JobStep(data: data),
+            content: _StepBody(child: _JobStep(data: data)),
           ),
           Step(
             title: const Text('Angebot'),
             isActive: _step >= 3,
-            content: _OfferStep(data: data),
+            content: _StepBody(child: _OfferStep(data: data)),
           ),
         ],
       ),
     );
   }
+}
+
+/// Wraps a step's content with a little top padding so the first field's
+/// floating label is not clipped by the Stepper's content boundary.
+class _StepBody extends StatelessWidget {
+  const _StepBody({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      Padding(padding: const EdgeInsets.only(top: 10), child: child);
 }
 
 class _SituationStep extends ConsumerWidget {
