@@ -7,6 +7,7 @@ import '../content/bewerbung.dart';
 import '../pdf/workbook_pdf.dart';
 import '../state/workbook.dart';
 import '../widgets/disclaimer_footer.dart';
+import 'coach_screen.dart';
 
 /// On-device interview preparation: STAR method + a question bank grouped by
 /// theme. General guidance, not individual application coaching.
@@ -38,6 +39,8 @@ class BewerbungScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                const _CoachCard(),
                 const SizedBox(height: 8),
                 const _WorkbookExport(),
                 const SizedBox(height: 8),
@@ -102,6 +105,33 @@ class BewerbungScreen extends StatelessWidget {
           ),
           const DisclaimerFooter(),
         ],
+      ),
+    );
+  }
+}
+
+/// Entry point to the interview chat simulation.
+class _CoachCard extends StatelessWidget {
+  const _CoachCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      color: theme.colorScheme.secondaryContainer,
+      child: ListTile(
+        leading: Icon(Icons.forum_outlined,
+            color: theme.colorScheme.onSecondaryContainer),
+        title: const Text('Gesprächssimulation'),
+        subtitle: const Text(
+            'Übe das Bewerbungsgespräch im Dialog. Vorschau – lokal, ohne KI '
+            '(KI-Coach folgt im Premium).'),
+        isThreeLine: true,
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const CoachScreen()),
+        ),
       ),
     );
   }

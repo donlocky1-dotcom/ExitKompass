@@ -1,6 +1,6 @@
 # KI-Coach für ExitKompass – Konzept & Architektur-Entscheidung
 
-*Stand 08.07.2026 · Entwurf zur Entscheidung · Android-first · Premium-Feature*
+*Stand 08.07.2026 · Gemini Flash · im Premium-Abo · Android-first · Prototyp gebaut*
 
 Gesprächs-Simulation (Bewerbung & Verhandlung) als kostenpflichtiges
 Premium-Feature – ohne das lokale, cloudfreie Versprechen der Kern-App
@@ -113,13 +113,26 @@ Einstellungen deaktivieren.“
 4. **Launch Bewerbungs-Coach** – als Premium-Feature, Feedback sammeln.
 5. **Ausbau** – Verhandlungs-Sim (Engine liefert Zahlen); optional On-Device.
 
-## Offene Entscheidungen
+## Getroffene Entscheidungen (Stand 08.07.2026)
 
-- **Anbieter/Modell** fürs MVP (Empfehlung: günstiges, starkes Modell mit
-  No-Training-Zusage).
-- **Premium-Modell & Preis** – Teil eines Abos oder eigener Aufpreis?
-- **Backend-Host** (Cloudflare Worker vorgeschlagen) und Betrieb.
-- **Umfang MVP** – nur Bewerbungs-Sim, oder gleich beide?
+- **Modell: Gemini Flash** – günstig, sehr gut auf Deutsch, im Paid-Tier kein
+  Training auf API-Daten.
+- **Monetarisierung: Teil des Premium-Abos** – kein separater Aufpreis.
+- **Backend-Host: Cloudflare Worker** – Free-Tier (100.000 Requests/Tag) ≈ **0 €**
+  am Start, erst bei viel Traffic 5 $/Monat. `*.workers.dev`-Subdomain gratis.
+  Der laufende Kostenblock ist allein die Gemini-API (~0,1–0,5 ct/Gespräch),
+  durchs Abo gedeckt.
+- **MVP-Umfang: Bewerbungs-Sim zuerst**; Verhandlungs-Sim als Ausbau.
 
-*Nächster konkreter Schritt bei grünem Licht: den lokal testbaren Prototyp
-(Schritt 1) bauen – ganz ohne Live-Keys oder Kosten.*
+## Status
+
+- **Schritt 1 gebaut (Prototyp, lokal, ohne Keys):** austauschbares
+  `CoachEngine`-Interface + Chat-UI (`coach_screen.dart`) + lokaler
+  Vorschau-Coach (`MockCoachEngine`, nutzt den Fragenkatalog). Erreichbar im
+  Bewerbungstraining als „Gesprächssimulation“. Tests grün.
+- **Offen für „echtes Gemini“:** ein Gemini-API-Key (Google AI Studio, Free-Tier
+  zum Testen) **und** der Cloudflare-Worker-Proxy. Beides braucht deine
+  ausdrückliche Freigabe – bis dahin läuft die Vorschau ohne KI.
+
+*Nächster Schritt bei grünem Licht: `GeminiCoachEngine` gegen den Proxy
+implementieren und hinter das Premium-Gate legen.*
