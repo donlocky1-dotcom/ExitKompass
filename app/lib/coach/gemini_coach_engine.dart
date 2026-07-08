@@ -44,20 +44,27 @@ class GeminiCoachEngine implements CoachEngine {
 
   @override
   Future<String> reply(List<CoachMessage> history) async {
-    final res = await _client.post(
-      Uri.parse(endpoint),
-      headers: {
-        'content-type': 'application/json',
-        if (entitlementToken != null) 'authorization': 'Bearer $entitlementToken',
-      },
-      body: jsonEncode({
-        'mode': 'interview',
-        'messages': [
-          for (final m in history)
-            {'role': m.role == CoachRole.user ? 'user' : 'coach', 'text': m.text},
-        ],
-      }),
-    );
+    final http.Response res;
+    try {
+      res = await _client.post(
+        Uri.parse(endpoint),
+        headers: {
+          'content-type': 'application/json',
+          if (entitlementToken != null)
+            'authorization': 'Bearer $entitlementToken',
+        },
+        body: jsonEncode({
+          'mode': 'interview',
+          'messages': [
+            for (final m in history)
+              {'role': m.role == CoachRole.user ? 'user' : 'coach', 'text': m.text},
+          ],
+        }),
+      );
+    } catch (_) {
+      return 'Der KI-Coach ist gerade nicht erreichbar (Verbindungsproblem). '
+          'Prüfe deine Internetverbindung und versuch es noch einmal.';
+    }
 
     if (res.statusCode == 402 || res.statusCode == 403) {
       return 'Der KI-Coach ist Teil von Premium. Bitte schalte Premium frei, '
