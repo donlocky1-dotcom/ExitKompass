@@ -78,4 +78,30 @@ void main() {
         CoachPersona.neutral);
     expect(reply, contains('Premium'));
   });
+
+  test('extractDocument uploads the file as base64 inline data', () async {
+    late http.Request captured;
+    final client = MockClient((req) async {
+      captured = req;
+      return http.Response(
+        jsonEncode({'reply': 'Berufliche Stationen: Data Engineer …'}),
+        200,
+        headers: {'content-type': 'application/json'},
+      );
+    });
+    final engine =
+        GeminiCoachEngine(endpoint: 'https://proxy.example/coach', client: client);
+
+    final text = await engine.extractDocument(
+      const CoachAttachment(
+          bytes: [37, 80, 68, 70], mimeType: 'application/pdf', name: 'cv.pdf'),
+    );
+
+    expect(text, contains('Data Engineer'));
+    final body = jsonDecode(captured.body) as Map<String, dynamic>;
+    expect(body['system'], contains('Lebenslauf')); // extraction prompt
+    final file = (body['messages'] as List).first['files'][0] as Map;
+    expect(file['mimeType'], 'application/pdf');
+    expect(file['data'], base64Encode([37, 80, 68, 70]));
+  });
 }

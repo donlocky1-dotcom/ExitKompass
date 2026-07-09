@@ -8,6 +8,7 @@ import '../pdf/workbook_pdf.dart';
 import '../state/workbook.dart';
 import '../widgets/disclaimer_footer.dart';
 import 'coach_screen.dart';
+import 'unterlagen_screen.dart';
 
 /// On-device interview preparation: STAR method + a question bank grouped by
 /// theme. General guidance, not individual application coaching.
@@ -41,6 +42,8 @@ class BewerbungScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const _CoachCard(),
+                const SizedBox(height: 8),
+                const _UnterlagenCard(),
                 const SizedBox(height: 8),
                 const _WorkbookExport(),
                 const SizedBox(height: 8),
@@ -131,6 +134,33 @@ class _CoachCard extends StatelessWidget {
         trailing: const Icon(Icons.chevron_right),
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(builder: (_) => const CoachScreen()),
+        ),
+      ),
+    );
+  }
+}
+
+/// Entry point to the CV ↔ job-ad document check.
+class _UnterlagenCard extends StatelessWidget {
+  const _UnterlagenCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      color: theme.colorScheme.secondaryContainer,
+      child: ListTile(
+        leading: Icon(Icons.description_outlined,
+            color: theme.colorScheme.onSecondaryContainer),
+        title: const Text('Unterlagen-Check'),
+        subtitle: const Text(
+            'Lebenslauf hochladen und mit der Stellenanzeige vergleichen lassen. '
+            'Die KI gibt Tipps – und nutzt beides im Gesprächstraining.'),
+        isThreeLine: true,
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const UnterlagenScreen()),
         ),
       ),
     );

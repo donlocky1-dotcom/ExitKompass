@@ -542,4 +542,27 @@ Nach Praxis-Feedback wurde die Szenario-Logik (M5) präzisiert:
 - **A20.5 Rücklagen = Vermögen:** Das im Liquiditätsplaner erfasste Feld
   „Rücklagen" (`savingsEuro`) dient zugleich als Vermögen der Bedarfsprüfung.
 
+## A21 – Unterlagen-Check: Lebenslauf-Upload & KI-Abgleich (2026-07-09)
+
+- **A21.1 Eingabe „gemischt":** Die **Stellenanzeige** wird als **Text**
+  eingefügt, der **Lebenslauf** als **PDF/Bild hochgeladen** (max. 8 MB,
+  PDF/PNG/JPG). Andere Formate (z. B. DOCX) werden nicht angenommen.
+- **A21.2 Einmalige Extraktion:** Der Lebenslauf wird **genau einmal** von
+  Gemini (multimodal) zu **strukturiertem Klartext** ausgelesen; danach arbeitet
+  die App nur noch mit Text. So wird die Datei **nicht bei jeder Chat-Nachricht**
+  neu übertragen (Kosten-/Datensparsamkeit). Persönliche Kontaktdaten werden bei
+  der Extraktion bewusst weggelassen.
+- **A21.3 Zwei Nutzungen:** (a) **Abgleich + Tipps** (Passung, passende Stärken,
+  Lücken, Gesprächstipps) als einmalige Analyse; (b) die Unterlagen fließen als
+  **Kontext ins Bewerbungsgespräch** (Fragen richten sich nach Stelle und
+  Werdegang). Der Prompt weist die KI an, **nur** die Angaben aus den Unterlagen
+  zu verwenden und nichts zu erfinden.
+- **A21.4 Keine Persistenz:** Lebenslauf-Text und Stellenanzeige liegen **nur im
+  Arbeitsspeicher** (kein Schreiben auf die Platte); „Daten löschen" räumt sie
+  mit ab. Reine **Übung/Orientierung**, keine Bewerbungs- oder Rechtsberatung.
+- **A21.5 Worker:** Der Proxy nimmt jetzt optionale `files` je Nachricht als
+  Base64-`inline_data` an und erlaubt bis zu **20 000** Zeichen im `system`-Feld
+  (ausgelesener Lebenslauf + Anzeige als Kontext). Braucht ein **einmaliges
+  Worker-Update** (Redeploy).
+
 _(wird fortlaufend gepflegt)_

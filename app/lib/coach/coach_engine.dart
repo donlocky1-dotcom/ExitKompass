@@ -8,14 +8,26 @@ library;
 
 enum CoachRole { coach, user }
 
-/// Which conversation is being simulated.
-enum CoachMode { interview, negotiation }
+/// Which conversation is being simulated. [unterlagen] is a one-shot document
+/// review (CV vs. job ad) rather than a turn-based role-play.
+enum CoachMode { interview, negotiation, unterlagen }
 
 extension CoachModeX on CoachMode {
   String get label => switch (this) {
         CoachMode.interview => 'Bewerbung',
         CoachMode.negotiation => 'Verhandlung',
+        CoachMode.unterlagen => 'Unterlagen',
       };
+}
+
+/// An uploaded document (e.g. a CV) to be read by the AI. Bytes are sent to
+/// the proxy as base64; the proxy forwards them to Gemini as inline data.
+class CoachAttachment {
+  const CoachAttachment({required this.bytes, required this.mimeType, this.name = ''});
+
+  final List<int> bytes;
+  final String mimeType;
+  final String name;
 }
 
 /// The character the AI plays as the conversation partner. Only the flavour
@@ -83,4 +95,9 @@ abstract class CoachEngine {
     CoachPersona persona, {
     String contextNote = '',
   });
+
+  /// Reads an uploaded document (e.g. a CV as PDF/image) once and returns its
+  /// content as structured plain text. Doing this a single time lets the rest
+  /// of the app work with cheap text (no re-uploading the file every turn).
+  Future<String> extractDocument(CoachAttachment attachment);
 }

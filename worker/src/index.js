@@ -71,16 +71,29 @@ export default {
     try { payload = await request.json(); }
     catch (_) { return json({ error: 'bad_request' }, 400); }
 
-    const appSystem = String(payload.system || '').slice(0, 4000);
+    // Large enough to carry an extracted CV + job ad as context, not just a
+    // short instruction.
+    const appSystem = String(payload.system || '').slice(0, 20000);
     const systemText = appSystem ? `${SAFETY_PREFIX}\n\n${appSystem}` : SAFETY_PREFIX;
 
     const messages = Array.isArray(payload.messages) ? payload.messages : [];
     const contents = messages
-      .map((m) => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: String(m.text || '') }],
-      }))
-      .filter((c) => c.parts[0].text.length > 0);
+      .map((m) => {
+        const parts = [];
+        const text = String(m.text || '');
+        if (text.length > 0) parts.push({ text });
+        // Optional uploaded documents (e.g. a CV as PDF/image), sent as
+        // base64 inline data so Gemini can read them directly.
+        if (Array.isArray(m.files)) {
+          for (const f of m.files) {
+            if (f && f.mimeType && f.data) {
+              parts.push({ inline_data: { mime_type: String(f.mimeType), data: String(f.data) } });
+            }
+          }
+        }
+        return { role: m.role === 'user' ? 'user' : 'model', parts };
+      })
+      .filter((c) => c.parts.length > 0);
     while (contents.length && contents[0].role === 'model') contents.shift();
     if (contents.length === 0) return json({ error: 'empty' }, 400);
 
@@ -92,7 +105,7 @@ export default {
     const gemReq = {
       systemInstruction: { parts: [{ text: systemText }] },
       contents,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
+      generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
     };
 
     let gem;

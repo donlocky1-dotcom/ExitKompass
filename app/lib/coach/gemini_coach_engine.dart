@@ -57,6 +57,40 @@ class GeminiCoachEngine implements CoachEngine {
     CoachMode mode,
     CoachPersona persona, {
     String contextNote = '',
+  }) {
+    return _send(
+      system: systemPromptFor(mode, persona, contextNote: contextNote),
+      messages: [
+        for (final m in history)
+          {'role': m.role == CoachRole.user ? 'user' : 'coach', 'text': m.text},
+      ],
+    );
+  }
+
+  @override
+  Future<String> extractDocument(CoachAttachment attachment) {
+    return _send(
+      system: kCvExtractionSystemPrompt,
+      messages: [
+        {
+          'role': 'user',
+          'text': 'Bitte extrahiere den Lebenslauf als strukturierten Klartext.',
+          'files': [
+            {
+              'mimeType': attachment.mimeType,
+              'data': base64Encode(attachment.bytes),
+            },
+          ],
+        },
+      ],
+    );
+  }
+
+  /// POSTs a system prompt + messages to the proxy and returns the reply text
+  /// (or a friendly, user-facing error string – never throws).
+  Future<String> _send({
+    required String system,
+    required List<Map<String, dynamic>> messages,
   }) async {
     final http.Response res;
     try {
@@ -67,13 +101,7 @@ class GeminiCoachEngine implements CoachEngine {
           if (entitlementToken != null)
             'authorization': 'Bearer $entitlementToken',
         },
-        body: jsonEncode({
-          'system': systemPromptFor(mode, persona, contextNote: contextNote),
-          'messages': [
-            for (final m in history)
-              {'role': m.role == CoachRole.user ? 'user' : 'coach', 'text': m.text},
-          ],
-        }),
+        body: jsonEncode({'system': system, 'messages': messages}),
       );
     } catch (_) {
       return 'Der KI-Coach ist gerade nicht erreichbar (Verbindungsproblem). '

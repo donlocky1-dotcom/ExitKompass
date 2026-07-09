@@ -37,9 +37,30 @@ Test-Request:
 ```bash
 curl -X POST http://localhost:8787 \
   -H 'content-type: application/json' \
-  -d '{"mode":"interview","messages":[{"role":"user","text":"Ich habe an einem Projekt gearbeitet, das ..."}]}'
+  -d '{"system":"Du bist ...","messages":[{"role":"user","text":"Ich habe an einem Projekt gearbeitet, das ..."}]}'
 # → {"reply":"…"}
 ```
+
+### Datei-Uploads (Lebenslauf-Check)
+
+Für den Unterlagen-Check kann eine Nachricht optional Dateien tragen (z. B. ein
+Lebenslauf als PDF/Bild). Sie werden als Base64-`inline_data` an Gemini
+weitergereicht (Gemini Flash liest PDFs/Bilder direkt):
+
+```json
+{
+  "system": "…Extraktions- oder Analyse-Prompt…",
+  "messages": [
+    { "role": "user", "text": "Bitte extrahiere den Lebenslauf …",
+      "files": [{ "mimeType": "application/pdf", "data": "<base64>" }] }
+  ]
+}
+```
+
+Die App liest die hochgeladene Datei **einmal** aus (Extraktion zu Klartext) und
+arbeitet danach nur noch mit Text – die Datei wird also nicht bei jeder
+Chat-Nachricht neu geschickt. Das `system`-Feld darf jetzt bis zu 20 000 Zeichen
+tragen (damit ausgelesener Lebenslauf + Stellenanzeige als Kontext passen).
 
 ## Deploy
 

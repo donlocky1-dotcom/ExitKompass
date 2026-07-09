@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../coach/coach_engine.dart';
 import '../coach/coach_providers.dart';
+import '../state/application_docs.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
 
@@ -85,6 +86,15 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     return b.toString().trimRight();
   }
 
+  /// The context passed to the engine for the active [mode]: the severance
+  /// figures for the negotiation, or the uploaded CV + job ad for the
+  /// interview (so the interviewer asks role-specific questions).
+  String _contextFor(CoachMode mode) => switch (mode) {
+        CoachMode.negotiation => _negotiationContext(),
+        CoachMode.interview => buildDocsContext(ref.read(applicationDocsProvider)),
+        CoachMode.unterlagen => '',
+      };
+
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _typing) return;
@@ -99,8 +109,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
       List.unmodifiable(_messages),
       _mode,
       _persona,
-      contextNote:
-          _mode == CoachMode.negotiation ? _negotiationContext() : '',
+      contextNote: _contextFor(_mode),
     );
     if (!mounted) return;
     setState(() {
@@ -153,6 +162,9 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
           _DisclaimerBanner(aiPowered: _engine.isAiPowered),
           _ModeSelector(selected: _mode, onChanged: _changeMode),
           _PersonaSelector(selected: _persona, onChanged: _changePersona),
+          if (_mode == CoachMode.interview &&
+              ref.watch(applicationDocsProvider).isReady)
+            const _DocsActiveHint(),
           Expanded(
             child: ListView.builder(
               controller: _scroll,
@@ -165,6 +177,33 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
             ),
           ),
           _Composer(controller: _controller, onSend: _send, enabled: !_typing),
+        ],
+      ),
+    );
+  }
+}
+
+class _DocsActiveHint extends StatelessWidget {
+  const _DocsActiveHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Row(
+        children: [
+          Icon(Icons.description_outlined,
+              size: 16, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Lebenslauf & Stellenanzeige aktiv – die Fragen richten sich '
+              'nach deinen Unterlagen.',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.primary),
+            ),
+          ),
         ],
       ),
     );

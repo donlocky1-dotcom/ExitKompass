@@ -25,6 +25,11 @@ class MockCoachEngine implements CoachEngine {
   @override
   String opening(CoachMode mode, CoachPersona persona) {
     final who = persona.label.toLowerCase();
+    if (mode == CoachMode.unterlagen) {
+      return 'Unterlagen-Check (Vorschau). Fügen Sie die Stellenanzeige ein und '
+          'laden Sie Ihren Lebenslauf hoch – mit dem KI-Coach vergleiche ich '
+          'beides und gebe konkrete Tipps.';
+    }
     if (mode == CoachMode.negotiation) {
       return 'Willkommen zur Verhandlungs-Simulation (Vorschau, $who). Ich '
           'spiele die Personalleitung im Abfindungsgespräch. Wie steigen Sie '
@@ -37,6 +42,17 @@ class MockCoachEngine implements CoachEngine {
   }
 
   @override
+  Future<String> extractDocument(CoachAttachment attachment) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    // The offline preview cannot read files – the real extraction runs on the
+    // Gemini engine. Return a clear placeholder so the flow still works.
+    return 'Lebenslauf „${attachment.name.isEmpty ? 'Datei' : attachment.name}" '
+        'hochgeladen (Vorschau – ohne KI wird der Inhalt nicht ausgelesen). '
+        'Mit dem KI-Coach im Premium wird der Lebenslauf hier automatisch als '
+        'Text erfasst.';
+  }
+
+  @override
   Future<String> reply(
     List<CoachMessage> history,
     CoachMode mode,
@@ -46,6 +62,7 @@ class MockCoachEngine implements CoachEngine {
     // Small delay so the UI shows a natural "typing" beat.
     await Future<void>.delayed(const Duration(milliseconds: 500));
 
+    if (mode == CoachMode.unterlagen) return _documentsReply();
     if (mode == CoachMode.negotiation) return _negotiationReply(history);
 
     final userTurns = history.where((m) => m.role == CoachRole.user).length;
@@ -64,6 +81,20 @@ class MockCoachEngine implements CoachEngine {
   String _feedbackFor(InterviewQuestion q) {
     final tip = q.tips.isNotEmpty ? ' ${q.tips.first}' : '';
     return '💡 Tipp zu dieser Frage: ${q.approach}$tip';
+  }
+
+  /// Offline stand-in for the document review (the real comparison runs on the
+  /// Gemini engine; this preview only shows the shape of the result).
+  String _documentsReply() {
+    return '1. Passung: Vorschau ohne KI – hier erscheint eine kurze '
+        'Einschätzung, wie gut Ihr Lebenslauf zur Stelle passt.\n\n'
+        '2. Passende Stärken: die Punkte aus Ihrem Lebenslauf, die zu den '
+        'Anforderungen passen.\n\n'
+        '3. Lücken & Risiken: fehlende Anforderungen und wie Sie sie '
+        'ansprechen.\n\n'
+        '4. Tipps fürs Gespräch: was Sie betonen und vorbereiten sollten.\n\n'
+        '(Mit dem KI-Coach im Premium wird dieser Abgleich automatisch aus '
+        'Ihren echten Unterlagen erstellt.)';
   }
 
   /// Minimal offline stand-in for the negotiation (the real dynamic partner
