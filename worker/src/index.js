@@ -105,7 +105,16 @@ export default {
     const gemReq = {
       systemInstruction: { parts: [{ text: systemText }] },
       contents,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+      generationConfig: {
+        temperature: 0.7,
+        // Enough for a full reply (e.g. the 4-part document analysis) without
+        // cutting off mid-sentence.
+        maxOutputTokens: 2048,
+        // Gemini 2.5 Flash otherwise spends part of the token budget on hidden
+        // "thinking", which can truncate or empty the visible answer. Disable
+        // it: the whole budget goes to the reply (also faster and cheaper).
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     };
 
     let gem;
