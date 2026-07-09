@@ -1,10 +1,10 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../coach/coach_engine.dart';
 import '../coach/coach_providers.dart';
 import '../state/application_docs.dart';
+import '../util/file_pick.dart';
 import 'coach_screen.dart';
 
 /// Upload a CV (PDF/image) and paste the job ad; the AI compares them and
@@ -19,7 +19,7 @@ class UnterlagenScreen extends ConsumerStatefulWidget {
 
 class _UnterlagenScreenState extends ConsumerState<UnterlagenScreen> {
   static const int _maxBytes = 8 * 1024 * 1024; // 8 MB
-  static const _allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg'];
+  static const _allowedMimes = {'application/pdf', 'image/png', 'image/jpeg'};
 
   late final TextEditingController _jobAd;
   bool _extracting = false;
@@ -45,37 +45,33 @@ class _UnterlagenScreenState extends ConsumerState<UnterlagenScreen> {
 
   Future<void> _pickCv() async {
     setState(() => _error = null);
-    final FilePickerResult? result;
+    final PickedFile? file;
     try {
-      result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: _allowedExtensions,
-        withData: true,
-      );
+      file = await pickCvFile();
     } catch (_) {
       setState(() => _error = 'Datei konnte nicht geöffnet werden.');
       return;
     }
-    if (result == null || result.files.isEmpty) return; // cancelled
-    final file = result.files.first;
-    final bytes = file.bytes;
-    if (bytes == null) {
+    if (file == null) return; // cancelled
+    if (file.bytes.isEmpty) {
       setState(() => _error = 'Datei konnte nicht gelesen werden.');
       return;
     }
-    if (bytes.length > _maxBytes) {
+    if (file.bytes.length > _maxBytes) {
       setState(() => _error = 'Die Datei ist zu groß (max. 8 MB).');
       return;
     }
-    final mime = _mimeFor(file.extension);
-    if (mime == null) {
+    final mime = file.mimeType.isNotEmpty
+        ? file.mimeType
+        : _mimeForName(file.name);
+    if (mime == null || !_allowedMimes.contains(mime)) {
       setState(() => _error = 'Bitte ein PDF oder ein Bild (PNG/JPG) wählen.');
       return;
     }
 
     setState(() => _extracting = true);
     final text = await _engine.extractDocument(
-      CoachAttachment(bytes: bytes, mimeType: mime, name: file.name),
+      CoachAttachment(bytes: file.bytes, mimeType: mime, name: file.name),
     );
     if (!mounted) return;
     ref
@@ -84,12 +80,15 @@ class _UnterlagenScreenState extends ConsumerState<UnterlagenScreen> {
     setState(() => _extracting = false);
   }
 
-  static String? _mimeFor(String? ext) => switch (ext?.toLowerCase()) {
-        'pdf' => 'application/pdf',
-        'png' => 'image/png',
-        'jpg' || 'jpeg' => 'image/jpeg',
-        _ => null,
-      };
+  static String? _mimeForName(String name) {
+    final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
+    return switch (ext) {
+      'pdf' => 'application/pdf',
+      'png' => 'image/png',
+      'jpg' || 'jpeg' => 'image/jpeg',
+      _ => null,
+    };
+  }
 
   Future<void> _analyze() async {
     final docs = ref.read(applicationDocsProvider);
