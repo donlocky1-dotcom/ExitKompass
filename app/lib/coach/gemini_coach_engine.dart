@@ -113,8 +113,16 @@ class GeminiCoachEngine implements CoachEngine {
           'um die KI-gestützte Simulation zu nutzen.';
     }
     if (res.statusCode != 200) {
+      // Include the upstream (Gemini) status if the proxy passed it through,
+      // so failures are diagnosable rather than an opaque number.
+      var upstream = '';
+      try {
+        final d =
+            jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+        if (d['status'] != null) upstream = ' – Gemini: ${d['status']}';
+      } catch (_) {}
       return 'Der KI-Coach ist gerade nicht erreichbar (Fehler '
-          '${res.statusCode}). Versuch es später noch einmal.';
+          '${res.statusCode}$upstream). Versuch es später noch einmal.';
     }
     final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
     final reply = (data['reply'] as String?)?.trim();

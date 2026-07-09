@@ -105,16 +105,9 @@ export default {
     const gemReq = {
       systemInstruction: { parts: [{ text: systemText }] },
       contents,
-      generationConfig: {
-        temperature: 0.7,
-        // Enough for a full reply (e.g. the 4-part document analysis) without
-        // cutting off mid-sentence.
-        maxOutputTokens: 2048,
-        // Gemini 2.5 Flash otherwise spends part of the token budget on hidden
-        // "thinking", which can truncate or empty the visible answer. Disable
-        // it: the whole budget goes to the reply (also faster and cheaper).
-        thinkingConfig: { thinkingBudget: 0 },
-      },
+      // Enough for a full reply (e.g. the 4-part document analysis) without
+      // cutting off mid-sentence.
+      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
     };
 
     let gem;
@@ -124,7 +117,12 @@ export default {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(gemReq),
       });
-      if (!r.ok) return json({ error: 'upstream', status: r.status }, 502);
+      if (!r.ok) {
+        // Surface the real Gemini status + a short detail so problems are
+        // diagnosable from the app instead of an opaque 502.
+        const detail = await r.text().catch(() => '');
+        return json({ error: 'upstream', status: r.status, detail: detail.slice(0, 400) }, 502);
+      }
       gem = await r.json();
     } catch (_) {
       return json({ error: 'upstream_unreachable' }, 502);
