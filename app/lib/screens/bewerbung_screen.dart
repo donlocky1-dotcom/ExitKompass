@@ -296,10 +296,18 @@ class _WorkbookFieldState extends ConsumerState<_WorkbookField> {
 
   @override
   Widget build(BuildContext context) {
-    final saved = ref.watch(workbookProvider)[widget.questionId] ?? '';
-    if (!_focus.hasFocus && _controller.text != saved) {
-      _controller.text = saved;
-    }
+    // Only sync EXTERNAL changes (e.g. "Daten löschen"), and never while the
+    // field is focused. Reassigning controller.text during a rebuild on every
+    // keystroke breaks IME composition on iOS Safari (characters get eaten),
+    // so we listen instead of watch – typing no longer rebuilds the field.
+    ref.listen<String>(
+      workbookProvider.select((m) => m[widget.questionId] ?? ''),
+      (previous, next) {
+        if (!_focus.hasFocus && _controller.text != next) {
+          _controller.text = next;
+        }
+      },
+    );
     return TextField(
       controller: _controller,
       focusNode: _focus,

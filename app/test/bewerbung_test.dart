@@ -1,5 +1,6 @@
 import 'package:exitkompass_app/content/bewerbung.dart';
 import 'package:exitkompass_app/screens/bewerbung_screen.dart';
+import 'package:exitkompass_app/state/workbook.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,5 +72,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('So gehst du ran'), findsWidgets);
     expect(find.text('Deine Antwort (wird lokal gespeichert)'), findsWidgets);
+
+    // Typing into the workbook field must keep the text and save it (the
+    // field must not clobber input by reassigning its controller on rebuild).
+    final field = find.byType(TextField).first;
+    await tester.enterText(field, 'Meine Übungsantwort');
+    await tester.pump();
+    expect(find.text('Meine Übungsantwort'), findsOneWidget);
+
+    final container = ProviderScope.containerOf(
+        tester.element(find.byType(BewerbungScreen)));
+    expect(container.read(workbookProvider).values,
+        contains('Meine Übungsantwort'));
   });
 }
