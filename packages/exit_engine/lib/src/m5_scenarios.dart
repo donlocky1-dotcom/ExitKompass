@@ -437,14 +437,22 @@ class _ScenarioBuilder {
       case ScenarioType.aufhebungsvertrag:
         final noticeObserved = usePaidRelease ||
             !offer.exitDate.isBefore(employment.regularEndDate);
-        final unlikely = blockingPeriodUnlikely(
+        // Safe harbour: anticipated dismissal + notice observed + severance
+        // within the § 1a corridor (0.25–0.5 salaries/year).
+        final safeHarbour = blockingPeriodUnlikely(
           dismissalWasThreatened: offer.anticipatesOperationalDismissal,
           noticePeriodObserved: noticeObserved,
           severanceCents: offer.severanceGrossCents,
           grossMonthCents: employment.grossMonthCents,
           tenureYears: tenureYears,
         );
-        if (unlikely) {
+        // A genuinely threatened, lawful operational dismissal with the notice
+        // period observed is itself the "wichtiger Grund" – then a Sperrzeit is
+        // not to be expected even when the severance exceeds the corridor (BA
+        // Weisungen zu § 159; e.g. IG-BCE social plans with a factor of 1.0+).
+        final threatenedWithNotice =
+            offer.anticipatesOperationalDismissal && noticeObserved;
+        if (safeHarbour) {
           flags.add(const RiskFlag(
             'sperrzeit_unwahrscheinlich',
             'Weil der Aufhebungsvertrag eine drohende betriebsbedingte '
@@ -453,16 +461,26 @@ class _ScenarioBuilder {
                 'bleibt, ist eine Sperrzeit meist unwahrscheinlich – lass es '
                 'aber im Einzelfall prüfen (§ 159 SGB III).',
           ));
+        } else if (threatenedWithNotice) {
+          flags.add(const RiskFlag(
+            'sperrzeit_unwahrscheinlich_pruefung',
+            'Weil eine betriebsbedingte Kündigung drohte und die '
+                'Kündigungsfrist gewahrt ist, ist eine Sperrzeit auch bei '
+                'höherer Abfindung meist nicht zu erwarten. Weil die Abfindung '
+                'über 0,5 Monatsgehältern je Jahr liegt, prüft die Agentur '
+                'gegebenenfalls noch, ob die Kündigung sozial gerechtfertigt '
+                'gewesen wäre – lass es im Einzelfall prüfen (§ 159 SGB III).',
+          ));
         } else {
           blockingMonths = _blockingMonths();
           flags.add(const RiskFlag(
             'sperrzeit_wahrscheinlich',
             'Für diesen Aufhebungsvertrag sind die Voraussetzungen für den '
                 'Wegfall der Sperrzeit nicht erfüllt (keine vorweggenommene '
-                'betriebsbedingte Kündigung, Kündigungsfrist nicht gewahrt '
-                'oder Abfindung über 0,5 Monatsgehältern je Jahr). Dann drohen '
-                '12 Wochen Sperrzeit und ein Viertel weniger Anspruchsdauer '
-                '(§ 159 SGB III) – lass die Voraussetzungen prüfen.',
+                'betriebsbedingte Kündigung oder die Kündigungsfrist ist nicht '
+                'gewahrt). Dann drohen 12 Wochen Sperrzeit und ein Viertel '
+                'weniger Anspruchsdauer (§ 159 SGB III) – lass die '
+                'Voraussetzungen prüfen.',
           ));
         }
       case ScenarioType.kuendigungAg:

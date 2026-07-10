@@ -19,6 +19,15 @@ void main() {
     expect(flags, isNot(contains('sperrzeit_wahrscheinlich')));
   });
 
+  test('betriebsbedingt + high severance → no Sperrzeit, only a review note', () {
+    // Chemical-industry style factor 1.0+ (well above the 0.5 corridor).
+    final data =
+        WizardData(kuendigungsArt: KuendigungsArt.betriebsbedingt, severanceGrossEuro: 100000);
+    final flags = _aufhebungFlags(data);
+    expect(flags, contains('sperrzeit_unwahrscheinlich_pruefung'));
+    expect(flags, isNot(contains('sperrzeit_wahrscheinlich')));
+  });
+
   test('an unclear ground keeps the S2 Sperrzeit risk', () {
     final data =
         WizardData(kuendigungsArt: KuendigungsArt.unbekannt, severanceGrossEuro: 20000);

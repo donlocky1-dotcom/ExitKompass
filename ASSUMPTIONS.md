@@ -490,6 +490,19 @@ Nach Praxis-Feedback wurde die Szenario-Logik (M5) präzisiert:
   Heuristik mit ausdrücklichem „im Einzelfall prüfen"-Hinweis.
 - **A17.4 Drift-Migration v4→v5:** Spalte `anticipates_operational_dismissal`
   (Default `false`) ergänzt; bestehende Profile bleiben gültig.
+- **A17.5 Kündigungsgrund „betriebsbedingt" impliziert die Vorwegnahme**
+  (2026-07-10): Wählt der Nutzer den Kündigungsgrund **betriebsbedingt**, gilt
+  die betriebsbedingte Kündigung als vorweggenommen (`compute()` setzt
+  `anticipatesOperationalDismissal` intern), sodass die S2-Sperrzeit im
+  Korridor entfällt. Das UI-Häkchen ist dann fest an.
+- **A17.6 Hohe Abfindung ≠ automatische Sperrzeit** (2026-07-10): Bei einer
+  **tatsächlich drohenden, rechtmäßigen betriebsbedingten Kündigung** mit
+  **gewahrter Frist** ist eine Sperrzeit auch **über dem 0,5-Korridor** nicht
+  zu erwarten (BA-Weisungen; z. B. IG-BCE-Sozialpläne mit Faktor 1,0+). M5 gibt
+  dann statt „Sperrzeit wahrscheinlich" den Flag
+  `sperrzeit_unwahrscheinlich_pruefung` aus: keine Sperrzeit, aber Hinweis, dass
+  die Agentur ggf. die **soziale Rechtfertigung** prüft. Ohne vorweggenommene
+  Kündigung oder ohne gewahrte Frist bleibt es bei „Sperrzeit wahrscheinlich".
 
 ## A18 – Kündigungsfrist als Eingabe, § 622 nur als Vorschlag (2026-07-07)
 

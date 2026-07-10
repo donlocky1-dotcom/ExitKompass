@@ -68,7 +68,11 @@ const List<HelpResource> helpResources = [
         'Rechtsanwaltskammer deines Bezirks. ExitKompass vermittelt keine '
         'Kanzleien und verdient nichts an diesem Hinweis.',
     sources: ['§ 4 KSchG', '§ 43c BRAO'],
-    highlightFlags: {'sperrzeit_wahrscheinlich', 'ruhen_158'},
+    highlightFlags: {
+      'sperrzeit_wahrscheinlich',
+      'sperrzeit_unwahrscheinlich_pruefung',
+      'ruhen_158',
+    },
   ),
   HelpResource(
     id: 'rechtsschutz',
@@ -109,6 +113,7 @@ const List<HelpResource> helpResources = [
     highlightFlags: {
       'sperrzeit_eigenkuendigung',
       'sperrzeit_wahrscheinlich',
+      'sperrzeit_unwahrscheinlich_pruefung',
       'ruhen_158',
       'alg_gedeckelt',
     },

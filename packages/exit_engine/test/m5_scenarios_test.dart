@@ -124,10 +124,17 @@ void main() {
       expect(s2.flags.any((f) => f.code == 'sperrzeit_wahrscheinlich'), isTrue);
     });
 
-    test('anticipated dismissal but large severance → blocking likely', () {
+    test('anticipated dismissal + large severance → not blocked, only reviewed',
+        () {
+      // Chemical-industry style: a genuine operational dismissal with the
+      // notice observed lifts the Sperrzeit even above the 0.5 corridor; the
+      // BA may still review the social justification.
       final r = _aggregate(offer: _offer(severance: 120000, anticipates: true));
       final s2 = r.scenarios[ScenarioType.aufhebungsvertrag]!;
-      expect(s2.flags.any((f) => f.code == 'sperrzeit_wahrscheinlich'), isTrue);
+      expect(
+          s2.flags.any((f) => f.code == 'sperrzeit_unwahrscheinlich_pruefung'),
+          isTrue);
+      expect(s2.flags.any((f) => f.code == 'sperrzeit_wahrscheinlich'), isFalse);
     });
 
     test('§ 158 suspension when the exit is before the regular end date', () {

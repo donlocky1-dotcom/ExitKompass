@@ -9,6 +9,7 @@ const _knownFlagCodes = {
   'ruhen_158',
   'sperrzeit_eigenkuendigung',
   'sperrzeit_unwahrscheinlich',
+  'sperrzeit_unwahrscheinlich_pruefung',
   'sperrzeit_wahrscheinlich',
   'alg_gedeckelt',
   'kv_luecke',
