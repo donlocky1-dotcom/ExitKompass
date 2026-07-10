@@ -194,7 +194,11 @@ class WizardData {
         exitDate: exitDate,
         paidRelease: paidRelease,
         settlementsCents: settlementsEuro * 100,
-        anticipatesOperationalDismissal: anticipatesOperationalDismissal,
+        // A betriebsbedingte Kündigung is itself the anticipated operational
+        // dismissal, so choosing that ground already lifts the S2 Sperrzeit
+        // (subject to notice period and a moderate severance, checked in M5).
+        anticipatesOperationalDismissal: anticipatesOperationalDismissal ||
+            kuendigungsArt == KuendigungsArt.betriebsbedingt,
       ),
       referenceDate: DateTime(now.year, now.month, 1),
       horizonMonths: horizonMonths,

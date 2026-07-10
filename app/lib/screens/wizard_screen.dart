@@ -362,18 +362,31 @@ class _OfferStep extends ConsumerWidget {
           onChanged: (v) => notifier.update((d) => d.copyWith(paidRelease: v)),
           title: const Text('Bezahlte Freistellung bis zum regulären Ende'),
         ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          value: data.anticipatesOperationalDismissal,
-          onChanged: (v) => notifier
-              .update((d) => d.copyWith(anticipatesOperationalDismissal: v)),
-          title: const Text(
-              'Aufhebungsvertrag nimmt eine betriebsbedingte Kündigung vorweg'),
-          subtitle: const Text(
-              'Der Arbeitgeber hätte sonst betriebsbedingt gekündigt. Zusammen mit '
-              'gewahrter Kündigungsfrist und maßvoller Abfindung (0,25–0,5 '
-              'Monatsgehälter je Jahr) entfällt die Sperrzeit meist (§ 159 SGB III).'),
-        ),
+        Builder(builder: (context) {
+          final impliedByGround =
+              data.kuendigungsArt == KuendigungsArt.betriebsbedingt;
+          return SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: data.anticipatesOperationalDismissal || impliedByGround,
+            // Already implied when the ground is "betriebsbedingt" – lock it on
+            // so the two inputs can't contradict each other.
+            onChanged: impliedByGround
+                ? null
+                : (v) => notifier.update(
+                    (d) => d.copyWith(anticipatesOperationalDismissal: v)),
+            title: const Text(
+                'Aufhebungsvertrag nimmt eine betriebsbedingte Kündigung vorweg'),
+            subtitle: Text(impliedByGround
+                ? 'Bei Kündigungsgrund „betriebsbedingt" ist das bereits '
+                    'angenommen: Zusammen mit gewahrter Kündigungsfrist und '
+                    'maßvoller Abfindung (0,25–0,5 Monatsgehälter je Jahr) '
+                    'entfällt die Sperrzeit meist (§ 159 SGB III).'
+                : 'Der Arbeitgeber hätte sonst betriebsbedingt gekündigt. '
+                    'Zusammen mit gewahrter Kündigungsfrist und maßvoller '
+                    'Abfindung (0,25–0,5 Monatsgehälter je Jahr) entfällt die '
+                    'Sperrzeit meist (§ 159 SGB III).'),
+          );
+        }),
         const SizedBox(height: 12),
         _IntField(
           label: 'Resturlaub-/Bonus-Abgeltung (€)',
