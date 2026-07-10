@@ -57,10 +57,11 @@ extension CoachPersonaX on CoachPersona {
           'Tritt sachlich und neutral-professionell auf, wie in einem normalen '
               'strukturierten Gespräch.',
         CoachPersona.hart =>
-          'Tritt fordernd und kritisch auf und spiele "auf hart": hake bei '
-              'schwachen oder oberflächlichen Antworten nach, hinterfrage '
-              'Widersprüche und gib dich nicht schnell zufrieden. Bleib dabei '
-              'fair und respektvoll – niemals beleidigend.',
+          'Tritt fordernd und selbstbewusst auf und spiele "auf hart": gib dich '
+              'nicht mit oberflächlichen Antworten zufrieden. Bleib dabei aber '
+              'im Gesprächsfluss, fair und respektvoll und verbeiß dich nicht '
+              'in einen einzelnen Punkt – nach einer kurzen Nachfrage geht es '
+              'weiter.',
       };
 }
 

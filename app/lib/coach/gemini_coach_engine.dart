@@ -38,17 +38,12 @@ class GeminiCoachEngine implements CoachEngine {
 
   @override
   String opening(CoachMode mode, CoachPersona persona) {
-    final who = persona.label.toLowerCase();
     if (mode == CoachMode.negotiation) {
-      return 'Willkommen zur Verhandlungs-Simulation. Ich spiele die '
-          'Personalleitung ($who) im Abfindungsgespräch. Führen Sie das '
-          'Gespräch, wie Sie es real täten.\n\nEröffnen Sie ruhig – wie steigen '
-          'Sie ein?';
+      return 'Guten Tag. Schön, dass wir uns zusammensetzen – Sie wissen ja, '
+          'worum es geht. Wie stellen Sie sich das Ganze vor?';
     }
-    return 'Willkommen zur Gesprächssimulation. Ich spiele die interviewende '
-        'Person ($who) und stelle Ihnen nacheinander Fragen. Antworten Sie, '
-        'wie Sie es im echten Gespräch täten – am besten mit der '
-        'STAR-Struktur.\n\nErzählen Sie mir zu Beginn kurz etwas über sich.';
+    return 'Schön, dass Sie da sind. Erzählen Sie mir zum Einstieg einfach '
+        'kurz etwas über sich.';
   }
 
   @override
