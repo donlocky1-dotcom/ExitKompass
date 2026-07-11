@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/application_docs.dart';
+import '../state/coach_session.dart';
 import '../state/wizard.dart';
 import '../state/workbook.dart';
 import '../widgets/disclaimer_footer.dart';
@@ -45,6 +46,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await ref.read(wizardProvider.notifier).clearSaved();
     await ref.read(workbookProvider.notifier).clearSaved();
     ref.read(applicationDocsProvider.notifier).clear();
+    ref.read(coachSessionProvider.notifier).clear();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Gespeicherte Daten wurden gelöscht.')),

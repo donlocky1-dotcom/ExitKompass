@@ -82,23 +82,50 @@ void main() {
     expect(find.text('Meine erste Antwort.'), findsOneWidget);
   });
 
-  testWidgets('switching mode asks before discarding an ongoing conversation',
+  testWidgets('each mode keeps its own conversation when switching',
       (tester) async {
     await tester.pumpWidget(
       const ProviderScope(child: MaterialApp(home: CoachScreen())),
     );
     await tester.pump();
-    await tester.enterText(find.byType(TextField), 'Meine erste Antwort.');
+    await tester.enterText(find.byType(TextField), 'Bewerbungs-Antwort.');
+    await tester.tap(find.byIcon(Icons.send));
+    await tester.pumpAndSettle();
+    expect(find.text('Bewerbungs-Antwort.'), findsOneWidget);
+
+    // Switch to Verhandlung → a fresh conversation, the other one is hidden.
+    await tester.tap(find.text('Verhandlung'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bewerbungs-Antwort.'), findsNothing);
+
+    // Switch back to Bewerbung → the conversation is restored.
+    await tester.tap(find.text('Bewerbung'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bewerbungs-Antwort.'), findsOneWidget);
+  });
+
+  testWidgets('a paused conversation resumes when reopening the coach',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    Widget appWith(Widget home) => UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(home: home),
+        );
+
+    await tester.pumpWidget(appWith(const CoachScreen()));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'Bitte fortsetzen.');
     await tester.tap(find.byIcon(Icons.send));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Verhandlung'));
+    // Leave the coach and open a brand-new CoachScreen (same container).
+    await tester.pumpWidget(appWith(const SizedBox.shrink()));
+    await tester.pump();
+    await tester.pumpWidget(appWith(const CoachScreen()));
     await tester.pumpAndSettle();
-    expect(find.text('Gespräch verwerfen?'), findsOneWidget);
 
-    // Cancelling keeps the conversation and the mode.
-    await tester.tap(find.text('Abbrechen'));
-    await tester.pumpAndSettle();
-    expect(find.text('Meine erste Antwort.'), findsOneWidget);
+    expect(find.text('Bitte fortsetzen.'), findsOneWidget);
   });
 }

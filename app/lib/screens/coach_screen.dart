@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../coach/coach_engine.dart';
 import '../coach/coach_providers.dart';
 import '../state/application_docs.dart';
+import '../state/coach_session.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
 
@@ -26,15 +27,32 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
   bool _typing = false;
-  late CoachMode _mode = widget.initialMode;
-  CoachPersona _persona = CoachPersona.neutral;
+  late CoachMode _mode;
+  late CoachPersona _persona;
 
   CoachEngine get _engine => ref.read(coachEngineProvider);
 
   @override
   void initState() {
     super.initState();
-    _reset();
+    _mode = widget.initialMode;
+    _persona = CoachPersona.neutral;
+    _loadMode(_mode);
+  }
+
+  /// Restores the saved conversation for [m] (resume) or starts a fresh one.
+  /// Assumes the caller updated [_mode]; does not call setState and does not
+  /// write the provider (safe to call from initState).
+  void _loadMode(CoachMode m) {
+    final saved = ref.read(coachSessionProvider)[m];
+    _messages.clear();
+    if (saved != null && saved.hasUserTurns) {
+      _persona = saved.persona;
+      _messages.addAll(saved.messages);
+    } else {
+      _messages.add(CoachMessage(CoachRole.coach, _engine.opening(m, _persona)));
+    }
+    _typing = false;
   }
 
   @override
@@ -42,6 +60,15 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     _controller.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  /// Persists the current conversation so it survives leaving the screen.
+  void _save() {
+    ref.read(coachSessionProvider.notifier).save(CoachSession(
+          messages: List.of(_messages),
+          mode: _mode,
+          persona: _persona,
+        ));
   }
 
   void _reset() {
@@ -52,6 +79,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
       _typing = false;
     });
     _controller.clear();
+    _save();
   }
 
   bool get _hasUserTurns => _messages.any((m) => m.role == CoachRole.user);
@@ -80,13 +108,14 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     return ok ?? false;
   }
 
-  Future<void> _changeMode(CoachMode m) async {
+  void _changeMode(CoachMode m) {
     if (m == _mode) return;
-    if (!await _confirmDiscard('Ein Moduswechsel startet ein neues Gespräch.')) {
-      return;
-    }
-    _mode = m;
-    _reset();
+    _save(); // keep the current mode's conversation
+    setState(() {
+      _mode = m;
+      _loadMode(m); // resume the other mode's conversation (or start fresh)
+    });
+    _controller.clear();
   }
 
   /// Switching the conversation partner only changes the tone – keep the
@@ -94,6 +123,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
   void _changePersona(CoachPersona p) {
     if (p == _persona) return;
     setState(() => _persona = p);
+    _save();
   }
 
   Future<void> _restart() async {
@@ -143,6 +173,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
       _typing = true;
     });
     _controller.clear();
+    _save(); // keep the user's turn even if they leave before the reply
     _scrollToEnd();
 
     final reply = await _engine.reply(
@@ -156,6 +187,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
       _messages.add(CoachMessage(CoachRole.coach, reply));
       _typing = false;
     });
+    _save();
     _scrollToEnd();
   }
 
