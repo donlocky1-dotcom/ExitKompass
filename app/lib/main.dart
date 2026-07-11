@@ -5,7 +5,9 @@ import 'data/app_database.dart';
 import 'data/wizard_repository.dart';
 import 'data/workbook_repository.dart';
 import 'screens/onboarding_screen.dart';
+import 'state/application_docs.dart';
 import 'state/coach_session.dart';
+import 'state/intake.dart';
 import 'state/wizard.dart';
 import 'state/workbook.dart';
 
@@ -19,6 +21,8 @@ Future<void> main() async {
   final workbookRepo = WorkbookRepository(db);
   final savedAnswers = await workbookRepo.loadAll();
   final coachSessions = await loadCoachSessions();
+  final docs = await loadApplicationDocs();
+  final intake = await loadIntake();
 
   runApp(
     ProviderScope(
@@ -31,6 +35,12 @@ Future<void> main() async {
         ),
         coachSessionProvider.overrideWith(
           (ref) => CoachSessionController(initial: coachSessions),
+        ),
+        applicationDocsProvider.overrideWith(
+          (ref) => ApplicationDocsController(initial: docs),
+        ),
+        intakeProvider.overrideWith(
+          (ref) => IntakeController(initial: intake),
         ),
       ],
       child: const ExitKompassApp(),

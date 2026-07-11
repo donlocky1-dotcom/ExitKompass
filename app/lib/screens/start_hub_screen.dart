@@ -44,8 +44,9 @@ class StartHubScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final data = ref.watch(wizardProvider);
 
-    final intakeDone = ref.watch(intakeDoneProvider);
-    final goal = ref.watch(startGoalProvider);
+    final intake = ref.watch(intakeProvider);
+    final intakeDone = intake.done;
+    final goal = intake.goal;
 
     void push(Widget screen) => Navigator.of(context)
         .push(MaterialPageRoute<void>(builder: (_) => screen));

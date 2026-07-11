@@ -1,10 +1,11 @@
 import 'package:drift/drift.dart';
 
+import '../state/workbook.dart';
 import 'app_database.dart';
 
 /// Loads and saves the user's Bewerbungstraining workbook answers to the
 /// local Drift/SQLite database, keyed by the interview question's id.
-class WorkbookRepository {
+class WorkbookRepository implements WorkbookStore {
   WorkbookRepository(this._db);
 
   final AppDatabase _db;
@@ -16,6 +17,7 @@ class WorkbookRepository {
   }
 
   /// Upserts one answer. An empty answer is removed to keep the table tidy.
+  @override
   Future<void> save(String questionId, String answer) async {
     if (answer.isEmpty) {
       await (_db.delete(_db.workbookAnswers)
@@ -32,5 +34,6 @@ class WorkbookRepository {
   }
 
   /// Deletes all saved answers (spec §13: "Daten vollständig löschen").
+  @override
   Future<void> clear() => _db.delete(_db.workbookAnswers).go();
 }

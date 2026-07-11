@@ -1,8 +1,6 @@
 import 'package:exit_engine/exit_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/wizard_repository.dart';
-
 /// Which situation the user is in (spec step 1). Only biases which
 /// scenario is emphasised; the engine always computes all four.
 enum Situation { kuendigungErhalten, aufhebungAngeboten, ueberlegeZuKuendigen, nurInfo }
@@ -168,6 +166,67 @@ class WizardData {
     );
   }
 
+  /// Serialises all inputs (for local persistence via shared_preferences).
+  Map<String, dynamic> toJson() => {
+        'situation': situation.index,
+        'birthYear': birthYear,
+        'taxClass': taxClass.index,
+        'childAllowanceFactor': childAllowanceFactor,
+        'childrenUnder25': childrenUnder25,
+        'hasChildForAlg': hasChildForAlg,
+        'churchMember': churchMember,
+        'state': state.code,
+        'healthAdditionalRatePercent': healthAdditionalRatePercent,
+        'grossMonthEuro': grossMonthEuro,
+        'annualExtrasEuro': annualExtrasEuro,
+        'entryDate': entryDate.millisecondsSinceEpoch,
+        'regularEndDate': regularEndDate.millisecondsSinceEpoch,
+        'severanceGrossEuro': severanceGrossEuro,
+        'exitDate': exitDate.millisecondsSinceEpoch,
+        'paidRelease': paidRelease,
+        'settlementsEuro': settlementsEuro,
+        'anticipatesOperationalDismissal': anticipatesOperationalDismissal,
+        'horizonMonths': horizonMonths,
+        'kuendigungsArt': kuendigungsArt.index,
+        'monthlyExpensesEuro': monthlyExpensesEuro,
+        'savingsEuro': savingsEuro,
+        'noticeDate': noticeDate.millisecondsSinceEpoch,
+      };
+
+  static WizardData fromJson(Map<String, dynamic> j) {
+    DateTime at(String k) => DateTime.fromMillisecondsSinceEpoch(j[k] as int);
+    T atEnum<T>(List<T> values, Object? idx, T fallback) =>
+        (idx is int && idx >= 0 && idx < values.length) ? values[idx] : fallback;
+    return WizardData(
+      situation: atEnum(Situation.values, j['situation'], Situation.kuendigungErhalten),
+      birthYear: j['birthYear'] as int,
+      taxClass: atEnum(TaxClass.values, j['taxClass'], TaxClass.i),
+      childAllowanceFactor: (j['childAllowanceFactor'] as num).toDouble(),
+      childrenUnder25: j['childrenUnder25'] as int,
+      hasChildForAlg: j['hasChildForAlg'] as bool,
+      churchMember: j['churchMember'] as bool,
+      state: Bundesland.fromCode(j['state'] as String),
+      healthAdditionalRatePercent:
+          (j['healthAdditionalRatePercent'] as num).toDouble(),
+      grossMonthEuro: j['grossMonthEuro'] as int,
+      annualExtrasEuro: j['annualExtrasEuro'] as int,
+      entryDate: at('entryDate'),
+      regularEndDate: at('regularEndDate'),
+      severanceGrossEuro: j['severanceGrossEuro'] as int,
+      exitDate: at('exitDate'),
+      paidRelease: j['paidRelease'] as bool,
+      settlementsEuro: j['settlementsEuro'] as int,
+      anticipatesOperationalDismissal:
+          j['anticipatesOperationalDismissal'] as bool,
+      horizonMonths: j['horizonMonths'] as int,
+      kuendigungsArt:
+          atEnum(KuendigungsArt.values, j['kuendigungsArt'], KuendigungsArt.unbekannt),
+      monthlyExpensesEuro: j['monthlyExpensesEuro'] as int,
+      savingsEuro: j['savingsEuro'] as int,
+      noticeDate: at('noticeDate'),
+    );
+  }
+
   /// Runs the M5 aggregator on the current inputs.
   AggregateResult compute() {
     final now = DateTime.now();
@@ -247,17 +306,24 @@ class WizardData {
   }
 }
 
+/// Persists the wizard inputs. Implemented by the Drift repository (native)
+/// and a shared_preferences store (used on the web preview).
+abstract class WizardStore {
+  Future<void> save(WizardData data);
+  Future<void> clear();
+}
+
 /// Holds the wizard inputs; screens read and mutate via this controller.
-/// When a [WizardRepository] is provided, every change is persisted.
+/// When a [WizardStore] is provided, every change is persisted.
 class WizardController extends StateNotifier<WizardData> {
   // Named parameters cannot bind a private field directly, so the
   // initializing-formal lint does not apply here.
-  WizardController({WizardRepository? repository, WizardData? initial})
+  WizardController({WizardStore? repository, WizardData? initial})
       // ignore: prefer_initializing_formals
       : _repository = repository,
         super(initial ?? WizardData());
 
-  final WizardRepository? _repository;
+  final WizardStore? _repository;
 
   void update(WizardData Function(WizardData) mutate) {
     state = mutate(state);

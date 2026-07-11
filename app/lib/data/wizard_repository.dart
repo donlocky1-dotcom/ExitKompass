@@ -6,7 +6,7 @@ import 'app_database.dart';
 
 /// Loads and saves the wizard inputs to the local Drift/SQLite database.
 /// There is exactly one saved state (id = 0).
-class WizardRepository {
+class WizardRepository implements WizardStore {
   WizardRepository(this._db);
 
   final AppDatabase _db;
@@ -46,6 +46,7 @@ class WizardRepository {
   }
 
   /// Upserts the single saved state.
+  @override
   Future<void> save(WizardData d) async {
     await _db.into(_db.wizardStates).insertOnConflictUpdate(
           WizardStatesCompanion.insert(
@@ -79,5 +80,6 @@ class WizardRepository {
   }
 
   /// Deletes the saved state (spec §13: "Daten vollständig löschen").
+  @override
   Future<void> clear() => _db.delete(_db.wizardStates).go();
 }

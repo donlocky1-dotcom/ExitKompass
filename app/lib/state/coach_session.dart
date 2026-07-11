@@ -92,9 +92,9 @@ class CoachSessionController extends StateNotifier<Map<CoachMode, CoachSession>>
   }
 
   Future<void> _persist() async {
-    final snapshot = state;
     try {
       final prefs = await SharedPreferences.getInstance();
+      final snapshot = state; // latest state after the await
       if (snapshot.isEmpty) {
         await prefs.remove(_kCoachSessionsKey);
         return;

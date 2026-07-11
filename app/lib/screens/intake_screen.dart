@@ -59,8 +59,7 @@ class _IntakeScreenState extends ConsumerState<IntakeScreen> {
               : d.entryDate,
           severanceGrossEuro: _hasOffer ? offer : 0,
         ));
-    ref.read(startGoalProvider.notifier).state = _goal;
-    ref.read(intakeDoneProvider.notifier).state = true;
+    ref.read(intakeProvider.notifier).complete(goal: _goal);
     _toShell();
   }
 
