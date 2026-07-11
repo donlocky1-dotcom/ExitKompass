@@ -1,14 +1,15 @@
-import 'package:exit_engine/exit_engine.dart';
 import 'package:exitkompass_app/state/application_docs.dart';
 import 'package:exitkompass_app/state/intake.dart';
 import 'package:exitkompass_app/state/prefs_stores.dart';
 import 'package:exitkompass_app/state/wizard.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferencesAsyncPlatform.instance =
+      InMemorySharedPreferencesAsync.empty());
 
   test('wizard inputs survive save + reload', () async {
     await WizardPrefsStore().save(WizardData(

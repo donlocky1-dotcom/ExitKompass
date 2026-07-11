@@ -57,8 +57,7 @@ const _kCoachSessionsKey = 'coach_sessions_v1';
 /// Loads the persisted conversations. Call once at startup (see main).
 Future<Map<CoachMode, CoachSession>> loadCoachSessions() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kCoachSessionsKey);
+    final raw = await SharedPreferencesAsync().getString(_kCoachSessionsKey);
     if (raw == null) return const {};
     final decoded = jsonDecode(raw) as Map<String, dynamic>;
     final out = <CoachMode, CoachSession>{};
@@ -93,8 +92,8 @@ class CoachSessionController extends StateNotifier<Map<CoachMode, CoachSession>>
 
   Future<void> _persist() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final snapshot = state; // latest state after the await
+      final prefs = SharedPreferencesAsync();
+      final snapshot = state;
       if (snapshot.isEmpty) {
         await prefs.remove(_kCoachSessionsKey);
         return;

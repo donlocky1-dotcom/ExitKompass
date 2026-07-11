@@ -61,8 +61,7 @@ const _kIntakeKey = 'intake_v1';
 /// Loads the persisted intake state. Call once at startup (see main).
 Future<IntakeState> loadIntake() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kIntakeKey);
+    final raw = await SharedPreferencesAsync().getString(_kIntakeKey);
     if (raw == null) return const IntakeState();
     return IntakeState.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   } catch (_) {
@@ -85,8 +84,8 @@ class IntakeController extends StateNotifier<IntakeState> {
 
   Future<void> _persist() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final snapshot = state; // latest state after the await
+      final prefs = SharedPreferencesAsync();
+      final snapshot = state;
       if (!snapshot.done && snapshot.goal == null) {
         await prefs.remove(_kIntakeKey);
         return;

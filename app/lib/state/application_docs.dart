@@ -55,8 +55,7 @@ const _kDocsKey = 'application_docs_v1';
 /// Loads the persisted documents. Call once at startup (see main).
 Future<ApplicationDocs> loadApplicationDocs() async {
   try {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kDocsKey);
+    final raw = await SharedPreferencesAsync().getString(_kDocsKey);
     if (raw == null) return const ApplicationDocs();
     return ApplicationDocs.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   } catch (_) {
@@ -85,8 +84,7 @@ class ApplicationDocsController extends StateNotifier<ApplicationDocs> {
 
   Future<void> _persist() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      // Read the latest state after the await so concurrent writes converge.
+      final prefs = SharedPreferencesAsync();
       final snapshot = state;
       if (!snapshot.hasCv && !snapshot.hasJobAd) {
         await prefs.remove(_kDocsKey);

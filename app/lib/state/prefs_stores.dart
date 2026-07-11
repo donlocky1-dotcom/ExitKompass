@@ -13,20 +13,18 @@ const _kWorkbookKey = 'workbook_v1';
 class WizardPrefsStore implements WizardStore {
   @override
   Future<void> save(WizardData data) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kWizardKey, jsonEncode(data.toJson()));
+    await SharedPreferencesAsync()
+        .setString(_kWizardKey, jsonEncode(data.toJson()));
   }
 
   @override
   Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_kWizardKey);
+    await SharedPreferencesAsync().remove(_kWizardKey);
   }
 
   static Future<WizardData?> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_kWizardKey);
+      final raw = await SharedPreferencesAsync().getString(_kWizardKey);
       if (raw == null) return null;
       return WizardData.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
@@ -39,8 +37,8 @@ class WizardPrefsStore implements WizardStore {
 class WorkbookPrefsStore implements WorkbookStore {
   @override
   Future<void> save(String questionId, String answer) async {
-    final prefs = await SharedPreferences.getInstance();
-    final map = _read(prefs);
+    final prefs = SharedPreferencesAsync();
+    final map = await _read(prefs);
     if (answer.isEmpty) {
       map.remove(questionId);
     } else {
@@ -55,21 +53,19 @@ class WorkbookPrefsStore implements WorkbookStore {
 
   @override
   Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_kWorkbookKey);
+    await SharedPreferencesAsync().remove(_kWorkbookKey);
   }
 
   static Future<Map<String, String>> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return _read(prefs);
+      return await _read(SharedPreferencesAsync());
     } catch (_) {
       return {};
     }
   }
 
-  static Map<String, String> _read(SharedPreferences prefs) {
-    final raw = prefs.getString(_kWorkbookKey);
+  static Future<Map<String, String>> _read(SharedPreferencesAsync prefs) async {
+    final raw = await prefs.getString(_kWorkbookKey);
     if (raw == null) return {};
     final decoded = jsonDecode(raw) as Map<String, dynamic>;
     return {for (final e in decoded.entries) e.key: e.value as String};
