@@ -53,6 +53,20 @@ class MockCoachEngine implements CoachEngine {
   }
 
   @override
+  Future<String> analyzeZeugnis(CoachAttachment attachment) async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    final name = attachment.name.isEmpty ? 'Ihr Zeugnis' : attachment.name;
+    return '1. Gesamtnote: Vorschau ohne KI – hier erscheint die geschätzte '
+        'Schulnote aus der zentralen Zufriedenheitsformel.\n\n'
+        '2. Leistung & Verhalten: Einordnung der Formulierungen zu Leistung, '
+        'Arbeitsweise und Sozialverhalten.\n\n'
+        '3. Was fehlt oder auffällt: z. B. eine fehlende Schlussformel (Dank, '
+        'Bedauern, Zukunftswünsche) oder verdeckt negative Codes.\n\n'
+        '4. Empfehlung: was Sie nachbessern lassen sollten.\n\n'
+        '(Mit dem KI-Coach im Premium wird „$name" automatisch ausgewertet.)';
+  }
+
+  @override
   Future<String> reply(
     List<CoachMessage> history,
     CoachMode mode,

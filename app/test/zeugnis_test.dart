@@ -1,6 +1,9 @@
+import 'package:exitkompass_app/coach/coach_engine.dart';
+import 'package:exitkompass_app/coach/mock_coach_engine.dart';
 import 'package:exitkompass_app/content/zeugnis.dart';
 import 'package:exitkompass_app/screens/zeugnis_decoder_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -31,6 +34,15 @@ void main() {
     test('a review date is set', () {
       expect(zeugnisReviewedOn, isNotEmpty);
     });
+
+    test('MockCoachEngine analyzeZeugnis returns the graded shape', () async {
+      final reply = await MockCoachEngine().analyzeZeugnis(
+        const CoachAttachment(
+            bytes: [1, 2, 3], mimeType: 'image/jpeg', name: 'zeugnis.jpg'),
+      );
+      expect(reply, contains('Gesamtnote'));
+      expect(reply, contains('zeugnis.jpg'));
+    });
   });
 
   testWidgets('decoder screen renders the scale and a grade badge', (tester) async {
@@ -39,7 +51,8 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MaterialApp(home: ZeugnisDecoderScreen()));
+    await tester.pumpWidget(const ProviderScope(
+        child: MaterialApp(home: ZeugnisDecoderScreen())));
     await tester.pumpAndSettle();
 
     expect(find.text('Leistungsbeurteilung'), findsOneWidget);

@@ -81,6 +81,27 @@ class GeminiCoachEngine implements CoachEngine {
     );
   }
 
+  @override
+  Future<String> analyzeZeugnis(CoachAttachment attachment) {
+    return _send(
+      system: kZeugnisAnalysisSystemPrompt,
+      messages: [
+        {
+          'role': 'user',
+          'text': 'Bitte analysiere dieses Arbeitszeugnis: Welche Gesamtnote '
+              'ergibt sich aus den Formulierungen, und fehlt etwas oder gibt es '
+              'Warnsignale?',
+          'files': [
+            {
+              'mimeType': attachment.mimeType,
+              'data': base64Encode(attachment.bytes),
+            },
+          ],
+        },
+      ],
+    );
+  }
+
   /// POSTs a system prompt + messages to the proxy and returns the reply text
   /// (or a friendly, user-facing error string – never throws). Transient
   /// upstream overloads (Gemini 503/500/429) are retried a couple of times

@@ -101,4 +101,9 @@ abstract class CoachEngine {
   /// content as structured plain text. Doing this a single time lets the rest
   /// of the app work with cheap text (no re-uploading the file every turn).
   Future<String> extractDocument(CoachAttachment attachment);
+
+  /// Reads an uploaded Arbeitszeugnis (PDF/photo) and returns an assessment:
+  /// the estimated school grade from the coded language plus what is missing
+  /// or hidden. One-shot, like [extractDocument].
+  Future<String> analyzeZeugnis(CoachAttachment attachment);
 }
