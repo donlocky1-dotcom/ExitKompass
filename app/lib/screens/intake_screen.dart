@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/intake.dart';
 import '../state/wizard.dart';
+import '../widgets/ui_kit.dart';
 import 'root_shell.dart';
 
 /// A short guided intake shown once after the disclaimer: why the person is
-/// here, what they want, and a few key figures. This replaces landing on the
-/// hub with example defaults – the situation is now the user's own. Everything
-/// can be refined later in Finanzen → "Eingaben bearbeiten".
+/// here, what they want, and a few key figures. Keeps the start light — the
+/// full inputs live behind Abfindung → "Angaben bearbeiten".
 class IntakeScreen extends ConsumerStatefulWidget {
   const IntakeScreen({super.key});
 
@@ -72,20 +72,23 @@ class _IntakeScreenState extends ConsumerState<IntakeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: groupedBackground(context),
       appBar: AppBar(
+        backgroundColor: groupedBackground(context),
+        surfaceTintColor: Colors.transparent,
         leading: _step > 0
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => setState(() => _step--),
               )
             : null,
-        title: Text('Schritt ${_step + 1} von 3'),
         actions: [
           TextButton(onPressed: _skip, child: const Text('Überspringen')),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(value: (_step + 1) / 3),
+          preferredSize: const Size.fromHeight(3),
+          child: LinearProgressIndicator(
+              value: (_step + 1) / 3, minHeight: 3),
         ),
       ),
       body: switch (_step) {
@@ -130,17 +133,21 @@ class _StepWhy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = abfindungAccent(context);
     return _StepScaffold(
       title: 'Warum bist du hier?',
       subtitle: 'Damit wir dir das Passende zeigen.',
       children: [
-        for (final s in Situation.values)
-          _ChoiceCard(
-            icon: _icons[s]!,
-            label: s.label,
-            selected: s == selected,
-            onTap: () => onSelect(s),
-          ),
+        AppGroup(children: [
+          for (final s in Situation.values)
+            _ChoiceRow(
+              accent: accent,
+              icon: _icons[s]!,
+              label: s.label,
+              selected: s == selected,
+              onTap: () => onSelect(s),
+            ),
+        ]),
       ],
     );
   }
@@ -153,17 +160,21 @@ class _StepGoal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = abfindungAccent(context);
     return _StepScaffold(
       title: 'Was möchtest du erreichen?',
       subtitle: 'Du kannst später alles nutzen – das hilft nur beim Einstieg.',
       children: [
-        for (final g in StartGoal.values)
-          _ChoiceCard(
-            icon: g.icon,
-            label: g.label,
-            selected: g == selected,
-            onTap: () => onSelect(g),
-          ),
+        AppGroup(children: [
+          for (final g in StartGoal.values)
+            _ChoiceRow(
+              accent: accent,
+              icon: g.icon,
+              label: g.label,
+              selected: g == selected,
+              onTap: () => onSelect(g),
+            ),
+        ]),
       ],
     );
   }
@@ -199,6 +210,7 @@ class _StepData extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Bruttomonatsgehalt (€)',
             prefixIcon: Icon(Icons.euro),
+            filled: true,
           ),
         ),
         const SizedBox(height: 12),
@@ -209,9 +221,10 @@ class _StepData extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Betriebszugehörigkeit (Jahre)',
             prefixIcon: Icon(Icons.badge_outlined),
+            filled: true,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           value: hasOffer,
@@ -226,12 +239,17 @@ class _StepData extends StatelessWidget {
             decoration: const InputDecoration(
               labelText: 'Angebotene Abfindung brutto (€)',
               prefixIcon: Icon(Icons.euro),
+              filled: true,
             ),
           ),
         const SizedBox(height: 24),
         FilledButton(
           onPressed: onFinish,
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+          ),
           child: const Text('Fertig – zur Übersicht'),
         ),
         const SizedBox(height: 8),
@@ -259,10 +277,12 @@ class _StepScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
-        Text(title, style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 4),
+        Text(title,
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+        const SizedBox(height: 6),
         Text(subtitle,
             style: theme.textTheme.bodyMedium
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
@@ -273,13 +293,15 @@ class _StepScaffold extends StatelessWidget {
   }
 }
 
-class _ChoiceCard extends StatelessWidget {
-  const _ChoiceCard({
+class _ChoiceRow extends StatelessWidget {
+  const _ChoiceRow({
+    required this.accent,
     required this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
   });
+  final Color accent;
   final IconData icon;
   final String label;
   final bool selected;
@@ -287,23 +309,38 @@ class _ChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      clipBehavior: Clip.antiAlias,
-      color: selected ? cs.primaryContainer : null,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-            color: selected ? cs.primary : cs.outlineVariant,
-            width: selected ? 1.5 : 1),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: cs.primary),
-        title: Text(label),
-        trailing: Icon(selected ? Icons.check_circle : Icons.chevron_right,
-            color: selected ? cs.primary : cs.onSurfaceVariant),
-        onTap: onTap,
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: selected ? 1 : 0.14),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon,
+                  size: 19,
+                  color: selected ? theme.colorScheme.onPrimary : accent),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Text(label,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500)),
+            ),
+            const SizedBox(width: 8),
+            Icon(selected ? Icons.check_circle_rounded : Icons.chevron_right,
+                size: 20,
+                color: selected
+                    ? accent
+                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+          ],
+        ),
       ),
     );
   }

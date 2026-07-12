@@ -8,6 +8,7 @@ import '../state/navigation.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
 import '../util/labels.dart';
+import '../widgets/ui_kit.dart';
 import 'root_shell.dart';
 
 /// Four-step wizard (spec §4 screens 2–5): situation, person & tax, job,
@@ -20,72 +21,49 @@ class WizardScreen extends ConsumerStatefulWidget {
 }
 
 class _WizardScreenState extends ConsumerState<WizardScreen> {
-  int _step = 0;
+  /// Done: show the results in the Abfindung area of the shell.
+  void _finish() {
+    ref.read(rootTabProvider.notifier).state = RootTab.abfindung;
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.popUntil((r) => r.isFirst);
+    } else {
+      nav.pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const RootShell()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final data = ref.watch(wizardProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Deine Angaben')),
-      body: Stepper(
-        currentStep: _step,
-        onStepTapped: (s) => setState(() => _step = s),
-        onStepContinue: () {
-          if (_step < 3) {
-            setState(() => _step++);
-          } else {
-            // Done: show the results in the Abfindung area of the shell.
-            ref.read(rootTabProvider.notifier).state = RootTab.abfindung;
-            final nav = Navigator.of(context);
-            if (nav.canPop()) {
-              nav.popUntil((r) => r.isFirst);
-            } else {
-              nav.pushReplacement(
-                MaterialPageRoute<void>(builder: (_) => const RootShell()),
-              );
-            }
-          }
-        },
-        onStepCancel: _step == 0 ? null : () => setState(() => _step--),
-        controlsBuilder: (context, details) {
-          if (details.stepIndex != _step) return const SizedBox.shrink();
-          return Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Row(
-            children: [
-              FilledButton(
-                onPressed: details.onStepContinue,
-                child: Text(_step == 3 ? 'Szenarien vergleichen' : 'Weiter'),
-              ),
-                if (_step > 0) ...[
-                  const SizedBox(width: 12),
-                  TextButton(
-                      onPressed: details.onStepCancel, child: const Text('Zurück')),
-                ],
-              ],
+      backgroundColor: groupedBackground(context),
+      appBar: AppBar(
+        backgroundColor: groupedBackground(context),
+        surfaceTintColor: Colors.transparent,
+        title: const Text('Deine Angaben'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+        children: [
+          const SectionLabel('Situation', topPad: 8),
+          _Section(child: _SituationStep(data: data)),
+          const SectionLabel('Person & Steuer'),
+          _Section(child: _PersonStep(data: data)),
+          const SectionLabel('Job'),
+          _Section(child: _JobStep(data: data)),
+          const SectionLabel('Angebot'),
+          _Section(child: _OfferStep(data: data)),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _finish,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
-          );
-        },
-        steps: [
-          Step(
-            title: const Text('Situation'),
-            isActive: _step >= 0,
-            content: _StepBody(child: _SituationStep(data: data)),
-          ),
-          Step(
-            title: const Text('Person & Steuer'),
-            isActive: _step >= 1,
-            content: _StepBody(child: _PersonStep(data: data)),
-          ),
-          Step(
-            title: const Text('Job'),
-            isActive: _step >= 2,
-            content: _StepBody(child: _JobStep(data: data)),
-          ),
-          Step(
-            title: const Text('Angebot'),
-            isActive: _step >= 3,
-            content: _StepBody(child: _OfferStep(data: data)),
+            child: const Text('Szenarien vergleichen'),
           ),
         ],
       ),
@@ -93,15 +71,25 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
   }
 }
 
-/// Wraps a step's content with a little top padding so the first field's
-/// floating label is not clipped by the Stepper's content boundary.
-class _StepBody extends StatelessWidget {
-  const _StepBody({required this.child});
+/// A white rounded panel that groups one section's fields on the grouped
+/// background, so the long inputs form reads as tidy blocks instead of a
+/// step-by-step funnel.
+class _Section extends StatelessWidget {
+  const _Section({required this.child});
   final Widget child;
 
   @override
-  Widget build(BuildContext context) =>
-      Padding(padding: const EdgeInsets.only(top: 10), child: child);
+  Widget build(BuildContext context) {
+    return Material(
+      color: groupedCard(context),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+        child: child,
+      ),
+    );
+  }
 }
 
 class _SituationStep extends ConsumerWidget {

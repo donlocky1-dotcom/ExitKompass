@@ -40,7 +40,7 @@ void main() {
 
   testWidgets('Finanzen shows the scenarios and the wizard round-trips',
       (tester) async {
-    tester.view.physicalSize = const Size(1200, 2600);
+    tester.view.physicalSize = const Size(1200, 6000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -68,12 +68,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(WizardScreen), findsOneWidget);
 
-    for (var i = 0; i < 3; i++) {
-      await tester.ensureVisible(find.text('Weiter'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Weiter'));
-      await tester.pumpAndSettle();
-    }
+    // The wizard is now a single scrollable form – finish via its button.
     await tester.ensureVisible(find.text('Szenarien vergleichen'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Szenarien vergleichen'));

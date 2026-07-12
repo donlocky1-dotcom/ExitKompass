@@ -86,11 +86,9 @@ class AppGroup extends StatelessWidget {
       }
       rows.add(children[i]);
     }
-    return Container(
-      decoration: BoxDecoration(
-        color: groupedCard(context),
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return Material(
+      color: groupedCard(context),
+      borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: Column(children: rows),
     );

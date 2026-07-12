@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<void> _openWizard(WidgetTester tester) async {
-  tester.view.physicalSize = const Size(1200, 2600);
+  // Tall viewport so the whole single-page inputs form is laid out at once.
+  tester.view.physicalSize = const Size(1200, 6000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -18,15 +19,13 @@ Future<void> _openWizard(WidgetTester tester) async {
   await tester.tap(find.text('Überspringen'));
   await tester.pumpAndSettle();
   // Open the wizard via Abfindung → "Angaben bearbeiten" so the inputs stay at
-  // their defaults (the quick estimate would prefill them).
+  // their defaults (the quick estimate would prefill them). It is now a single
+  // scrollable form – the Angebot section (estimator, timing) is always there.
   await tester.tap(find.descendant(
       of: find.byType(NavigationBar), matching: find.text('Abfindung')));
   await tester.pumpAndSettle();
   await tester.ensureVisible(find.text('Angaben bearbeiten'));
   await tester.tap(find.text('Angaben bearbeiten'));
-  await tester.pumpAndSettle();
-  // Jump to the offer step (step index 3).
-  await tester.tap(find.text('Angebot'));
   await tester.pumpAndSettle();
 }
 
