@@ -15,12 +15,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Loads persisted state, but never lets a slow or stuck storage backend block
-/// the first frame. On iOS Safari the IndexedDB-backed store can hang or be
-/// unavailable (private mode, storage pressure); if a load does not resolve in
-/// time we boot with defaults instead of showing a blank page forever.
+/// the first frame. On iOS Safari the IndexedDB-backed store hangs or is
+/// unavailable (Private Browsing blocks it entirely); if a load does not
+/// resolve quickly we boot with defaults instead of showing a blank page.
+/// Local reads normally take a few milliseconds, so a short cap is safe and
+/// keeps Private Browsing from staring at a white screen.
 Future<T> _load<T>(Future<T> Function() read, T fallback) async {
   try {
-    return await read().timeout(const Duration(seconds: 6));
+    return await read().timeout(const Duration(milliseconds: 1500));
   } catch (_) {
     return fallback;
   }
