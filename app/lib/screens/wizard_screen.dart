@@ -22,9 +22,24 @@ class WizardScreen extends ConsumerStatefulWidget {
 }
 
 class _WizardScreenState extends ConsumerState<WizardScreen> {
-  /// Done: mark the figures as entered (so the hub shows real numbers instead
-  /// of a prompt) and show the results in the Abfindung area of the shell.
+  /// Set once the user tried to finish without the core figures – shows the
+  /// missing-fields hint.
+  bool _showErrors = false;
+
+  /// Done: only once the core figures are present. Marks the data as entered
+  /// (so the hub shows real numbers instead of a prompt) and shows the results
+  /// in the Abfindung area of the shell.
   void _finish() {
+    final data = ref.read(wizardProvider);
+    if (!data.hasCoreData) {
+      setState(() => _showErrors = true);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+          content: Text('Bitte fülle noch die markierten Pflichtangaben aus.'),
+        ));
+      return;
+    }
     ref.read(intakeProvider.notifier).complete();
     ref.read(rootTabProvider.notifier).state = RootTab.abfindung;
     final nav = Navigator.of(context);
@@ -37,9 +52,23 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
     }
   }
 
+  /// A short list of the still-missing core fields, for the hint under the
+  /// button.
+  String _missingCore(WizardData d) {
+    final missing = <String>[
+      if (d.grossMonthEuro <= 0) 'Bruttomonatsgehalt',
+      if (d.birthYear <= 1900) 'Geburtsjahr',
+      if (d.entryDate.year <= 1900) 'Eintrittsdatum',
+      if (d.exitDate.year <= 1900) 'Austrittsdatum',
+    ];
+    return missing.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = ref.watch(wizardProvider);
+    final theme = Theme.of(context);
+    final showHint = _showErrors && !data.hasCoreData;
     return Scaffold(
       backgroundColor: groupedBackground(context),
       appBar: AppBar(
@@ -50,12 +79,22 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
         children: [
-          const SectionLabel('Situation', topPad: 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
+            child: Text(
+              'Für die Abfindungs- und Steuer-Analyse brauchen wir zuerst deine '
+              'Angaben. Pflicht sind Gehalt, Geburtsjahr und die beiden Daten – '
+              'der Rest ist optional.',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ),
+          const SectionLabel('Situation'),
           _Section(child: _SituationStep(data: data)),
           const SectionLabel('Person & Steuer'),
-          _Section(child: _PersonStep(data: data)),
+          _Section(child: _PersonStep(data: data, showErrors: _showErrors)),
           const SectionLabel('Job'),
-          _Section(child: _JobStep(data: data)),
+          _Section(child: _JobStep(data: data, showErrors: _showErrors)),
           const SectionLabel('Angebot'),
           _Section(child: _OfferStep(data: data)),
           const SizedBox(height: 24),
@@ -68,6 +107,15 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
             ),
             child: const Text('Szenarien vergleichen'),
           ),
+          if (showHint)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 10, 6, 0),
+              child: Text(
+                'Bitte noch ausfüllen: ${_missingCore(data)}.',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.error),
+              ),
+            ),
         ],
       ),
     );
@@ -142,8 +190,9 @@ class _SituationStep extends ConsumerWidget {
 }
 
 class _PersonStep extends ConsumerWidget {
-  const _PersonStep({required this.data});
+  const _PersonStep({required this.data, this.showErrors = false});
   final WizardData data;
+  final bool showErrors;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -154,6 +203,7 @@ class _PersonStep extends ConsumerWidget {
         _IntField(
           label: 'Geburtsjahr',
           value: data.birthYear,
+          errorText: showErrors && data.birthYear <= 1900 ? 'Pflichtangabe' : null,
           onChanged: (v) => notifier.update((d) => d.copyWith(birthYear: v)),
         ),
         const SizedBox(height: 12),
@@ -210,8 +260,9 @@ class _PersonStep extends ConsumerWidget {
 }
 
 class _JobStep extends ConsumerWidget {
-  const _JobStep({required this.data});
+  const _JobStep({required this.data, this.showErrors = false});
   final WizardData data;
+  final bool showErrors;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -222,6 +273,8 @@ class _JobStep extends ConsumerWidget {
         _IntField(
           label: 'Bruttomonatsgehalt (€)',
           value: data.grossMonthEuro,
+          errorText:
+              showErrors && data.grossMonthEuro <= 0 ? 'Pflichtangabe' : null,
           onChanged: (v) => notifier.update((d) => d.copyWith(grossMonthEuro: v)),
         ),
         const SizedBox(height: 12),
@@ -234,6 +287,9 @@ class _JobStep extends ConsumerWidget {
         _DateField(
           label: 'Eintrittsdatum',
           value: data.entryDate,
+          errorText: showErrors && data.entryDate.year <= 1900
+              ? 'Bitte wählen'
+              : null,
           onChanged: (v) => notifier.update((d) => d.copyWith(entryDate: v)),
         ),
         const SizedBox(height: 12),
@@ -242,6 +298,9 @@ class _JobStep extends ConsumerWidget {
         _DateField(
           label: 'Reguläres Ende der Kündigungsfrist (genaues Datum)',
           value: data.regularEndDate,
+          errorText: showErrors && data.regularEndDate.year <= 1900
+              ? 'Bitte wählen'
+              : null,
           onChanged: (v) => notifier.update((d) => d.copyWith(regularEndDate: v)),
         ),
       ],
@@ -518,6 +577,8 @@ class _SeveranceEstimatorState extends ConsumerState<_SeveranceEstimator> {
     final theme = Theme.of(context);
     final tenureYears = data.tenureYears;
     final age = data.ageAtExit;
+    // Needs the salary and the dates to say anything meaningful.
+    final ready = data.hasCoreData;
 
     final estimate = data.estimateSeveranceRange(
       strength: _strength,
@@ -533,52 +594,58 @@ class _SeveranceEstimatorState extends ConsumerState<_SeveranceEstimator> {
           children: [
             Text('Abfindung schätzen', style: theme.textTheme.titleSmall),
             Text(
-              'Höhe noch offen? Schätze eine realistische Bandbreite '
-              '($tenureYears Jahre, Alter $age).',
+              ready
+                  ? 'Höhe noch offen? Schätze eine realistische Bandbreite '
+                      '($tenureYears Jahre, Alter $age).'
+                  : 'Trage oben Gehalt, Geburtsjahr und die beiden Daten ein – '
+                      'dann schätzen wir die Bandbreite.',
               style: theme.textTheme.bodySmall,
             ),
-            const SizedBox(height: 8),
-            SegmentedButton<NegotiationStrength>(
-              segments: const [
-                ButtonSegment(value: NegotiationStrength.schwach, label: Text('Schwach')),
-                ButtonSegment(value: NegotiationStrength.standard, label: Text('Standard')),
-                ButtonSegment(value: NegotiationStrength.stark, label: Text('Stark')),
-              ],
-              selected: {_strength},
-              onSelectionChanged: (s) => setState(() => _strength = s.first),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              value: _smallBusiness,
-              onChanged: (v) => setState(() => _smallBusiness = v),
-              title: const Text('Kleinbetrieb (unter 10 Mitarbeiter)'),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Realistische Spanne: '
-              '${euroFromCents(estimate.lowCents, withDecimals: false)} – '
-              '${euroFromCents(estimate.highCents, withDecimals: false)}',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(color: theme.colorScheme.primary),
-            ),
-            Text(
-              'Regelabfindung (§ 1a, Faktor 0,5): '
-              '${euroFromCents(estimate.regelabfindungCents, withDecimals: false)}'
-              '${estimate.cappedByKschG10 ? ' · gekappt auf ${estimate.kschG10CapMonths} Monatsgehälter (§ 10 KSchG)' : ''}',
-              style: theme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                icon: const Icon(Icons.arrow_downward, size: 18),
-                label: const Text('Mittelwert übernehmen'),
-                onPressed: () => ref.read(wizardProvider.notifier).update(
-                      (d) => d.copyWith(severanceGrossEuro: (estimate.pointCents / 100).round()),
-                    ),
+            if (ready) ...[
+              const SizedBox(height: 8),
+              SegmentedButton<NegotiationStrength>(
+                segments: const [
+                  ButtonSegment(value: NegotiationStrength.schwach, label: Text('Schwach')),
+                  ButtonSegment(value: NegotiationStrength.standard, label: Text('Standard')),
+                  ButtonSegment(value: NegotiationStrength.stark, label: Text('Stark')),
+                ],
+                selected: {_strength},
+                onSelectionChanged: (s) => setState(() => _strength = s.first),
               ),
-            ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                value: _smallBusiness,
+                onChanged: (v) => setState(() => _smallBusiness = v),
+                title: const Text('Kleinbetrieb (unter 10 Mitarbeiter)'),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Realistische Spanne: '
+                '${euroFromCents(estimate.lowCents, withDecimals: false)} – '
+                '${euroFromCents(estimate.highCents, withDecimals: false)}',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(color: theme.colorScheme.primary),
+              ),
+              Text(
+                'Regelabfindung (§ 1a, Faktor 0,5): '
+                '${euroFromCents(estimate.regelabfindungCents, withDecimals: false)}'
+                '${estimate.cappedByKschG10 ? ' · gekappt auf ${estimate.kschG10CapMonths} Monatsgehälter (§ 10 KSchG)' : ''}',
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.arrow_downward, size: 18),
+                  label: const Text('Mittelwert übernehmen'),
+                  onPressed: () => ref.read(wizardProvider.notifier).update(
+                        (d) => d.copyWith(
+                            severanceGrossEuro: (estimate.pointCents / 100).round()),
+                      ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -596,8 +663,10 @@ class _SeveranceField extends ConsumerStatefulWidget {
 }
 
 class _SeveranceFieldState extends ConsumerState<_SeveranceField> {
-  late final TextEditingController _controller =
-      TextEditingController(text: ref.read(wizardProvider).severanceGrossEuro.toString());
+  late final TextEditingController _controller = TextEditingController(
+      text: ref.read(wizardProvider).severanceGrossEuro == 0
+          ? ''
+          : ref.read(wizardProvider).severanceGrossEuro.toString());
   final FocusNode _focus = FocusNode();
 
   @override
@@ -611,12 +680,14 @@ class _SeveranceFieldState extends ConsumerState<_SeveranceField> {
   Widget build(BuildContext context) {
     final value = ref.watch(wizardProvider).severanceGrossEuro;
     if (!_focus.hasFocus && (int.tryParse(_controller.text) ?? -1) != value) {
-      _controller.text = value.toString();
+      _controller.text = value == 0 ? '' : value.toString();
     }
     return TextFormField(
       controller: _controller,
       focusNode: _focus,
-      decoration: const InputDecoration(labelText: 'Abfindung brutto (€)'),
+      decoration: const InputDecoration(
+          labelText: 'Abfindung brutto (€)',
+          hintText: 'Angebot – oder oben schätzen lassen'),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       onChanged: (t) => ref
@@ -627,16 +698,23 @@ class _SeveranceFieldState extends ConsumerState<_SeveranceField> {
 }
 
 class _IntField extends StatelessWidget {
-  const _IntField({required this.label, required this.value, required this.onChanged});
+  const _IntField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.errorText,
+  });
   final String label;
   final int value;
   final ValueChanged<int> onChanged;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      initialValue: value.toString(),
-      decoration: InputDecoration(labelText: label),
+      // Blank rather than a fake "0" so the form starts empty.
+      initialValue: value == 0 ? '' : value.toString(),
+      decoration: InputDecoration(labelText: label, errorText: errorText),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       onChanged: (t) => onChanged(int.tryParse(t) ?? 0),
@@ -662,24 +740,40 @@ class _DoubleField extends StatelessWidget {
 }
 
 class _DateField extends StatelessWidget {
-  const _DateField({required this.label, required this.value, required this.onChanged});
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.errorText,
+  });
   final String label;
   final DateTime value;
   final ValueChanged<DateTime> onChanged;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     // Numeric-only pattern → no locale symbol data needed.
     final fmt = DateFormat('dd.MM.yyyy');
+    final isSet = value.year > 1900;
+    final Color? subColor = errorText != null
+        ? theme.colorScheme.error
+        : (isSet ? null : theme.colorScheme.onSurfaceVariant);
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-      subtitle: Text(fmt.format(value)),
-      trailing: const Icon(Icons.calendar_today, size: 20),
+      title: Text(label, style: theme.textTheme.bodyMedium),
+      subtitle: Text(
+        errorText ?? (isSet ? fmt.format(value) : 'Noch nicht gewählt'),
+        style: theme.textTheme.bodySmall?.copyWith(color: subColor),
+      ),
+      trailing: Icon(Icons.calendar_today,
+          size: 20, color: errorText != null ? theme.colorScheme.error : null),
       onTap: () async {
+        final now = DateTime.now();
         final picked = await showDatePicker(
           context: context,
-          initialDate: value,
+          initialDate: isSet ? value : DateTime(now.year, now.month),
           firstDate: DateTime(1980),
           lastDate: DateTime(2100),
         );

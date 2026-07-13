@@ -1,5 +1,7 @@
 import 'package:exit_engine/exit_engine.dart';
 import 'package:exitkompass_app/main.dart';
+import 'package:exitkompass_app/state/intake.dart';
+import 'package:exitkompass_app/state/wizard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,13 +13,22 @@ Future<void> _openWizard(WidgetTester tester) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  await tester.pumpWidget(const ProviderScope(child: ExitKompassApp()));
+  // Seed complete example inputs (the plain WizardData() defaults) and mark the
+  // intake done, so the estimator/timing render and the hub offers "Angaben
+  // bearbeiten" instead of the empty-start prompt.
+  await tester.pumpWidget(ProviderScope(
+    overrides: [
+      wizardProvider.overrideWith((ref) => WizardController(initial: WizardData())),
+      intakeProvider
+          .overrideWith((ref) => IntakeController(initial: const IntakeState(done: true))),
+    ],
+    child: const ExitKompassApp(),
+  ));
   await tester.tap(find.byType(Checkbox));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Loslegen'));
   await tester.pumpAndSettle();
-  // Open the wizard via Abfindung → "Angaben bearbeiten" so the inputs stay at
-  // their defaults (the quick estimate would prefill them). It is now a single
+  // Open the wizard via Abfindung → "Angaben bearbeiten". It is a single
   // scrollable form – the Angebot section (estimator, timing) is always there.
   await tester.tap(find.descendant(
       of: find.byType(NavigationBar), matching: find.text('Abfindung')));

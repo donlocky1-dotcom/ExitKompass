@@ -54,8 +54,12 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    await tester.pumpWidget(const ProviderScope(
-      child: MaterialApp(home: Scaffold(body: LiquidityTab())),
+    await tester.pumpWidget(ProviderScope(
+      // Seed example inputs (empty-start defaults would have no income).
+      overrides: [
+        wizardProvider.overrideWith((ref) => WizardController(initial: WizardData())),
+      ],
+      child: const MaterialApp(home: Scaffold(body: LiquidityTab())),
     ));
     await tester.pumpAndSettle();
 

@@ -70,9 +70,45 @@ class WizardData {
         exitDate = exitDate ?? _defaultExit,
         noticeDate = noticeDate ?? _today;
 
+  /// A blank starting point: the core figures (salary, birth year, entry/exit
+  /// dates, severance) are left unset so the input form starts empty and the
+  /// analysis asks for them before showing any numbers. Non-core details keep
+  /// quiet, sensible defaults. The plain [WizardData] constructor still carries
+  /// example defaults (used for tests, the PDF dossier and previews).
+  factory WizardData.empty() => WizardData(
+        birthYear: 0,
+        grossMonthEuro: 0,
+        severanceGrossEuro: 0,
+        annualExtrasEuro: 0,
+        settlementsEuro: 0,
+        entryDate: unsetDate,
+        regularEndDate: unsetDate,
+        exitDate: unsetDate,
+      );
+
   static final DateTime _defaultEntry = DateTime(2015, 1, 1);
   static final DateTime _today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   static final DateTime _defaultExit = DateTime(DateTime.now().year, DateTime.now().month + 3, 1);
+
+  /// Sentinel for "no date chosen yet" (the input form shows it as blank and
+  /// requires a real pick). Kept before the date picker's firstDate.
+  static final DateTime unsetDate = DateTime(1900);
+
+  static bool _dateIsSet(DateTime d) => d.year > 1900;
+
+  /// Whether the essential figures for a meaningful net/tax analysis are
+  /// present: salary, birth year and the employment start / notice-period end.
+  /// The severance offer and detail fields (church tax, health add-on,
+  /// savings…) stay optional.
+  bool get hasCoreData =>
+      grossMonthEuro > 0 &&
+      birthYear > 1900 &&
+      _dateIsSet(entryDate) &&
+      _dateIsSet(regularEndDate);
+
+  /// The exit date to reckon tenure and age from: the explicit offer exit date
+  /// when set, otherwise the end of the notice period.
+  DateTime get _exitOrEnd => _dateIsSet(exitDate) ? exitDate : regularEndDate;
 
   final Situation situation;
   final int birthYear;
@@ -250,7 +286,7 @@ class WizardData {
       ),
       offer: OfferData(
         severanceGrossCents: severanceGrossEuro * 100,
-        exitDate: exitDate,
+        exitDate: _exitOrEnd,
         paidRelease: paidRelease,
         settlementsCents: settlementsEuro * 100,
         // A betriebsbedingte Kündigung is itself the anticipated operational
@@ -271,10 +307,10 @@ class WizardData {
 
   /// Full years of tenure (entry → exit), clamped like the estimator.
   int get tenureYears =>
-      (exitDate.difference(entryDate).inDays / 365).floor().clamp(0, 60);
+      (_exitOrEnd.difference(entryDate).inDays / 365).floor().clamp(0, 60);
 
   /// Age at the exit date.
-  int get ageAtExit => exitDate.year - birthYear;
+  int get ageAtExit => _exitOrEnd.year - birthYear;
 
   /// A negotiable severance range from the persisted inputs (M6). The
   /// negotiation [strength] defaults to the one suggested by the persisted
@@ -321,7 +357,7 @@ class WizardController extends StateNotifier<WizardData> {
   WizardController({WizardStore? repository, WizardData? initial})
       // ignore: prefer_initializing_formals
       : _repository = repository,
-        super(initial ?? WizardData());
+        super(initial ?? WizardData.empty());
 
   final WizardStore? _repository;
 
@@ -330,10 +366,10 @@ class WizardController extends StateNotifier<WizardData> {
     _repository?.save(state);
   }
 
-  /// Resets the inputs to their defaults and deletes the saved state
+  /// Resets the inputs to a blank form and deletes the saved state
   /// (spec §13: "Daten vollständig löschen").
   Future<void> clearSaved() async {
-    state = WizardData();
+    state = WizardData.empty();
     await _repository?.clear();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:exit_engine/exit_engine.dart';
+import 'package:exitkompass_app/state/intake.dart';
 import 'package:exitkompass_app/state/wizard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,7 +44,16 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const ProviderScope(child: ExitKompassApp()));
+    // Seed complete example inputs + intake done, so the analysis is available
+    // (with empty data the row would route to the input form first).
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        wizardProvider.overrideWith((ref) => WizardController(initial: WizardData())),
+        intakeProvider
+            .overrideWith((ref) => IntakeController(initial: const IntakeState(done: true))),
+      ],
+      child: const ExitKompassApp(),
+    ));
     await tester.tap(find.byType(Checkbox));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Loslegen'));

@@ -1,4 +1,5 @@
 import 'package:exitkompass_app/screens/non_compete_screen.dart';
+import 'package:exitkompass_app/state/wizard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,8 +12,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const ProviderScope(
-      child: MaterialApp(home: NonCompeteScreen()),
+    await tester.pumpWidget(ProviderScope(
+      // Seed an example salary (the empty-start default would prefill 0).
+      overrides: [
+        wizardProvider.overrideWith((ref) => WizardController(initial: WizardData())),
+      ],
+      child: const MaterialApp(home: NonCompeteScreen()),
     ));
     await tester.pumpAndSettle();
 

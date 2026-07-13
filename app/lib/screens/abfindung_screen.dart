@@ -67,8 +67,12 @@ class AbfindungScreen extends ConsumerWidget {
             accent: accent,
             icon: Icons.bar_chart_rounded,
             title: 'Netto-Szenarien & Fristen',
-            subtitle: 'Bleiben · Aufhebung · Kündigung im Vergleich',
-            onTap: () => push(const FinanzenScreen()),
+            subtitle: intake.done
+                ? 'Bleiben · Aufhebung · Kündigung im Vergleich'
+                : 'Zuerst deine Angaben – dann der Vergleich',
+            // Ask for the data when it's needed: no analysis without inputs.
+            onTap: () =>
+                push(intake.done ? const FinanzenScreen() : const WizardScreen()),
           ),
           AppRow(
             accent: accent,
@@ -80,7 +84,7 @@ class AbfindungScreen extends ConsumerWidget {
           AppRow(
             accent: accent,
             icon: Icons.tune_rounded,
-            title: 'Angaben bearbeiten',
+            title: intake.done ? 'Angaben bearbeiten' : 'Angaben eingeben',
             subtitle: 'Gehalt, Kündigungsfrist, Steuer – für den Vergleich',
             onTap: () => push(const WizardScreen()),
           ),
