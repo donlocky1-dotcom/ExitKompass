@@ -401,14 +401,17 @@ class HubScaffold extends StatelessWidget {
       backgroundColor: groupedBackground(context),
       body: CustomScrollView(
         slivers: [
-          SliverAppBar.large(
+          // Medium (not large) keeps a bold title without wasting a big slice
+          // of the screen on empty header space.
+          SliverAppBar.medium(
             backgroundColor: groupedBackground(context),
             surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
             actions: actions,
             title: Text(title),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
             sliver: SliverList(delegate: SliverChildListDelegate(slivers)),
           ),
         ],

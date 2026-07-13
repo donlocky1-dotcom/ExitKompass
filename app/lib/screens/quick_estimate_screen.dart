@@ -20,11 +20,14 @@ class QuickEstimateScreen extends ConsumerStatefulWidget {
 }
 
 class _QuickEstimateScreenState extends ConsumerState<QuickEstimateScreen> {
-  int _grossMonthEuro = 4500;
-  int _tenureYears = 8;
-  int _age = 42;
+  // Start empty – no example figures.
+  int _grossMonthEuro = 0;
+  int _tenureYears = 0;
+  int _age = 0;
   NegotiationStrength _strength = NegotiationStrength.standard;
   bool _smallBusiness = false;
+
+  bool get _ready => _grossMonthEuro > 0 && _tenureYears > 0 && _age > 0;
 
   SeveranceEstimate get _estimate => estimateSeverance(
         grossMonthCents: _grossMonthEuro * 100,
@@ -64,10 +67,14 @@ class _QuickEstimateScreenState extends ConsumerState<QuickEstimateScreen> {
         AppHero(
           accent: accent,
           eyebrow: 'Schnell-Check',
-          headline: '${euroFromCents(e.lowCents, withDecimals: false)} – '
-              '${euroFromCents(e.highCents, withDecimals: false)}',
-          caption: 'Realistische Bandbreite · Mittelwert '
-              '${euroFromCents(e.pointCents, withDecimals: false)}',
+          headline: _ready
+              ? '${euroFromCents(e.lowCents, withDecimals: false)} – '
+                  '${euroFromCents(e.highCents, withDecimals: false)}'
+              : '—',
+          caption: _ready
+              ? 'Realistische Bandbreite · Mittelwert '
+                  '${euroFromCents(e.pointCents, withDecimals: false)}'
+              : 'Realistische Bandbreite – trage deine Werte ein',
         ),
         const SectionLabel('Deine Eckdaten'),
         AppCard(
@@ -122,11 +129,15 @@ class _QuickEstimateScreenState extends ConsumerState<QuickEstimateScreen> {
         const SectionLabel('So kommt die Zahl zustande'),
         AppCard(
           child: Text(
-            'Regelabfindung (§ 1a) '
-            '${euroFromCents(e.regelabfindungCents, withDecimals: false)}'
-            '${e.cappedByKschG10 ? ' · gekappt auf ${e.kschG10CapMonths} Monatsgehälter (§ 10 KSchG)' : ''}. '
-            'Orientierung nach der Faustformel – kein Rechtsanspruch, die '
-            'tatsächliche Höhe hängt vom Einzelfall ab.',
+            _ready
+                ? 'Regelabfindung (§ 1a) '
+                    '${euroFromCents(e.regelabfindungCents, withDecimals: false)}'
+                    '${e.cappedByKschG10 ? ' · gekappt auf ${e.kschG10CapMonths} Monatsgehälter (§ 10 KSchG)' : ''}. '
+                    'Orientierung nach der Faustformel – kein Rechtsanspruch, die '
+                    'tatsächliche Höhe hängt vom Einzelfall ab.'
+                : 'Trage Gehalt, Beschäftigungsjahre und Alter ein – dann '
+                    'schätzen wir die Bandbreite nach der Faustformel '
+                    '(Orientierung, kein Rechtsanspruch).',
             style: theme.textTheme.bodyMedium
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
@@ -156,7 +167,8 @@ class _NumberField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      initialValue: value.toString(),
+      // Blank rather than a fake "0" so the check starts empty.
+      initialValue: value == 0 ? '' : value.toString(),
       decoration: InputDecoration(labelText: label),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],

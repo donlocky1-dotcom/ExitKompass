@@ -5,6 +5,7 @@ import '../coach/coach_engine.dart';
 import '../state/intake.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
+import '../widgets/disclaimer_footer.dart';
 import '../widgets/ui_kit.dart';
 import 'coach_screen.dart';
 import 'finanzen_screen.dart';
@@ -81,13 +82,16 @@ class AbfindungScreen extends ConsumerWidget {
             subtitle: 'Abfindung in 30 Sekunden schätzen',
             onTap: () => push(const QuickEstimateScreen()),
           ),
-          AppRow(
-            accent: accent,
-            icon: Icons.tune_rounded,
-            title: intake.done ? 'Angaben bearbeiten' : 'Angaben eingeben',
-            subtitle: 'Gehalt, Kündigungsfrist, Steuer – für den Vergleich',
-            onTap: () => push(const WizardScreen()),
-          ),
+          // Editing only once data exists – for a first run the analysis rows
+          // above already lead into the input form.
+          if (intake.done)
+            AppRow(
+              accent: accent,
+              icon: Icons.tune_rounded,
+              title: 'Angaben bearbeiten',
+              subtitle: 'Gehalt, Kündigungsfrist, Steuer – für den Vergleich',
+              onTap: () => push(const WizardScreen()),
+            ),
         ]),
         const SectionLabel('Üben & mehr'),
         AppGroup(children: [
@@ -108,6 +112,7 @@ class AbfindungScreen extends ConsumerWidget {
             onTap: () => push(const ToolsScreen()),
           ),
         ]),
+        const DisclaimerNote(),
       ],
     );
   }

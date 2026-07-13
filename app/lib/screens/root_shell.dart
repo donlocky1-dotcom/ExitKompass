@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/navigation.dart';
-import '../widgets/disclaimer_footer.dart';
 import 'abfindung_screen.dart';
 import 'bewerben_hub_screen.dart';
 import 'mehr_screen.dart';
@@ -21,20 +20,13 @@ class RootShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(rootTabProvider);
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: IndexedStack(
-              index: index,
-              children: const [
-                StartHubScreen(),
-                AbfindungScreen(),
-                BewerbenScreen(),
-                MehrScreen(),
-              ],
-            ),
-          ),
-          const DisclaimerFooter(),
+      body: IndexedStack(
+        index: index,
+        children: const [
+          StartHubScreen(),
+          AbfindungScreen(),
+          BewerbenScreen(),
+          MehrScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(

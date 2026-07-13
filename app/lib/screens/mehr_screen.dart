@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 
 import '../pdf/dossier.dart';
+import '../state/intake.dart';
+import '../state/navigation.dart';
 import '../state/wizard.dart';
 import '../timeline/timeline.dart';
+import '../widgets/disclaimer_footer.dart';
 import '../widgets/ui_kit.dart';
 import 'ratgeber_screen.dart';
 import 'settings_screen.dart';
@@ -15,7 +18,16 @@ import 'settings_screen.dart';
 class MehrScreen extends ConsumerWidget {
   const MehrScreen({super.key});
 
-  Future<void> _sharePdf(WidgetRef ref) async {
+  Future<void> _sharePdf(BuildContext context, WidgetRef ref) async {
+    // The dossier needs the figures – guide the user to enter them first.
+    if (!ref.read(intakeProvider).done) {
+      ref.read(rootTabProvider.notifier).state = RootTab.abfindung;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+            'Bitte zuerst deine Angaben eingeben – dann gibt es das PDF-Dossier.'),
+      ));
+      return;
+    }
     final data = ref.read(wizardProvider);
     final bytes = await buildDossierPdf(
       data: data,
@@ -61,7 +73,7 @@ class MehrScreen extends ConsumerWidget {
             icon: Icons.ios_share_outlined,
             title: 'PDF-Dossier teilen',
             subtitle: 'Zahlen, Fristen & Hilfe als PDF',
-            onTap: () => _sharePdf(ref),
+            onTap: () => _sharePdf(context, ref),
           ),
           AppRow(
             accent: accent,
@@ -71,6 +83,7 @@ class MehrScreen extends ConsumerWidget {
             onTap: () => push(const SettingsScreen()),
           ),
         ]),
+        const DisclaimerNote(),
       ],
     );
   }

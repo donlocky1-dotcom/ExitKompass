@@ -60,7 +60,7 @@ class WizardData {
     this.paidRelease = false,
     this.settlementsEuro = 0,
     this.anticipatesOperationalDismissal = false,
-    this.horizonMonths = 24,
+    this.horizonMonths = 12,
     this.kuendigungsArt = KuendigungsArt.unbekannt,
     this.monthlyExpensesEuro = 2500,
     this.savingsEuro = 10000,

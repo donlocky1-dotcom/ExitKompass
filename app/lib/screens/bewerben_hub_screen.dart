@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/application_docs.dart';
+import '../widgets/disclaimer_footer.dart';
 import '../widgets/ui_kit.dart';
 import 'bewerbung_screen.dart';
 import 'coach_screen.dart';
@@ -77,6 +78,7 @@ class BewerbenScreen extends ConsumerWidget {
             onTap: () => push(const ZeugnisDecoderScreen()),
           ),
         ]),
+        const DisclaimerNote(),
       ],
     );
   }
