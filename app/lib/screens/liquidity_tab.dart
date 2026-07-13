@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
 import '../util/labels.dart';
+import '../widgets/ui_kit.dart';
 
 /// Liquidity / bridge tab (M7): "Reicht mein Geld bis zum neuen Job?".
 /// Projects savings + the chosen scenario's net income minus monthly
@@ -43,62 +44,81 @@ class _LiquidityTabState extends ConsumerState<LiquidityTab> {
     final notifier = ref.read(wizardProvider.notifier);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       children: [
+        const SectionLabel('Liquidität', topPad: 8),
         Text('Reicht mein Geld bis zum neuen Job?',
-            style: theme.textTheme.titleMedium),
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(
           'Rücklagen plus Einkommen des gewählten Szenarios, minus deine '
           'monatlichen Ausgaben.',
-          style: theme.textTheme.bodySmall,
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _IntField(
-                label: 'Ausgaben/Monat (€)',
-                value: data.monthlyExpensesEuro,
-                onChanged: (v) =>
-                    notifier.update((d) => d.copyWith(monthlyExpensesEuro: v)),
+        const SizedBox(height: 14),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _IntField(
+                      label: 'Ausgaben/Monat (€)',
+                      value: data.monthlyExpensesEuro,
+                      onChanged: (v) => notifier
+                          .update((d) => d.copyWith(monthlyExpensesEuro: v)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _IntField(
+                      label: 'Rücklagen (€)',
+                      value: data.savingsEuro,
+                      onChanged: (v) =>
+                          notifier.update((d) => d.copyWith(savingsEuro: v)),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _IntField(
-                label: 'Rücklagen (€)',
-                value: data.savingsEuro,
-                onChanged: (v) =>
-                    notifier.update((d) => d.copyWith(savingsEuro: v)),
+              const SizedBox(height: 14),
+              Text('Szenario', style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final t in _order)
+                    ChoiceChip(
+                      label: Text(scenarioShortLabel(t)),
+                      selected: t == scenario,
+                      showCheckmark: false,
+                      onSelected: (_) => setState(() => _scenario = t),
+                    ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        Text('Szenario', style: theme.textTheme.labelLarge),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 8,
-          children: [
-            for (final t in _order)
-              ChoiceChip(
-                label: Text(scenarioShortLabel(t)),
-                selected: t == scenario,
-                onSelected: (_) => setState(() => _scenario = t),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _RunwayHeadline(runway: runway, horizonMonths: result.horizonMonths,
             referenceDate: result.referenceDate),
-        const SizedBox(height: 16),
-        SizedBox(height: 220, child: _RunwayChart(runway: runway)),
-        const SizedBox(height: 8),
-        Text(
-          'Vereinfachte Cashflow-Projektion ohne Zinsen und Inflation. '
-          'Schätzung, keine Finanzberatung.',
-          style: theme.textTheme.labelSmall,
+        const SectionLabel('Kontostand über die Zeit'),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 210, child: _RunwayChart(runway: runway)),
+              const SizedBox(height: 8),
+              Text(
+                'Vereinfachte Cashflow-Projektion ohne Zinsen und Inflation. '
+                'Schätzung, keine Finanzberatung.',
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -179,17 +199,42 @@ class _RunwayHeadline extends StatelessWidget {
           '${euroFromCents(runway.minBalanceCents, withDecimals: false)}.';
     }
 
-    return Card(
-      color: survives
-          ? theme.colorScheme.primaryContainer
-          : theme.colorScheme.errorContainer,
-      child: ListTile(
-        leading: Icon(
-          survives ? Icons.check_circle_outline : Icons.warning_amber_outlined,
-          color: color,
-        ),
-        title: Text(title, style: theme.textTheme.titleSmall),
-        subtitle: Text(subtitle),
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(
+              survives
+                  ? Icons.check_circle_outline
+                  : Icons.warning_amber_outlined,
+              size: 19,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 3),
+                Text(subtitle,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

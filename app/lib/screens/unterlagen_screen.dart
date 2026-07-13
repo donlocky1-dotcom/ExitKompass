@@ -5,6 +5,7 @@ import '../coach/coach_engine.dart';
 import '../coach/coach_providers.dart';
 import '../state/application_docs.dart';
 import '../util/file_pick.dart';
+import '../widgets/ui_kit.dart';
 import 'coach_screen.dart';
 
 /// Upload a CV (PDF/image) once and compare it against several job ads. Each
@@ -184,83 +185,112 @@ class _UnterlagenScreenState extends ConsumerState<UnterlagenScreen> {
     final busy = _extracting || _analyzing;
     final ready = docs.hasCv && (profile?.hasJobAd ?? false);
 
+    final accent = bewerbenAccent(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Unterlagen-Check')),
+      backgroundColor: groupedBackground(context),
+      appBar: AppBar(
+        title: const Text('Unterlagen-Check'),
+        backgroundColor: groupedBackground(context),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+      ),
       body: Column(
         children: [
           _Banner(aiPowered: _engine.isAiPowered),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                Text('Deine Stellen', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 6),
-                _ProfilePicker(
-                  docs: docs,
-                  onSelect: busy
-                      ? null
-                      : (id) {
-                          _nameFocus.unfocus();
-                          _jobAdFocus.unfocus();
-                          ref
+                const SectionLabel('Deine Stellen', topPad: 8),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ProfilePicker(
+                        docs: docs,
+                        onSelect: busy
+                            ? null
+                            : (id) {
+                                _nameFocus.unfocus();
+                                _jobAdFocus.unfocus();
+                                ref
+                                    .read(applicationDocsProvider.notifier)
+                                    .selectProfile(id);
+                              },
+                        onAdd: busy ? null : _addProfile,
+                        onDelete:
+                            (busy || docs.profiles.length <= 1 || profile == null)
+                                ? null
+                                : () => _deleteSelected(profile),
+                      ),
+                      if (profile != null) ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _name,
+                          focusNode: _nameFocus,
+                          textInputAction: TextInputAction.done,
+                          onChanged: (v) => ref
                               .read(applicationDocsProvider.notifier)
-                              .selectProfile(id);
-                        },
-                  onAdd: busy ? null : _addProfile,
-                  onDelete: (busy || docs.profiles.length <= 1 || profile == null)
-                      ? null
-                      : () => _deleteSelected(profile),
+                              .updateProfile(profile.id, title: v),
+                          decoration: const InputDecoration(
+                            labelText: 'Bezeichnung',
+                            hintText: 'z. B. Data Engineer bei Firma X',
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
                 if (profile != null) ...[
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _name,
-                    focusNode: _nameFocus,
-                    textInputAction: TextInputAction.done,
-                    onChanged: (v) => ref
-                        .read(applicationDocsProvider.notifier)
-                        .updateProfile(profile.id, title: v),
-                    decoration: const InputDecoration(
-                      labelText: 'Bezeichnung',
-                      hintText: 'z. B. Data Engineer bei Firma X',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text('Stellenanzeige', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _jobAd,
-                    focusNode: _jobAdFocus,
-                    minLines: 4,
-                    maxLines: 10,
-                    onChanged: (v) => ref
-                        .read(applicationDocsProvider.notifier)
-                        .updateProfile(profile.id, jobAdText: v),
-                    decoration: const InputDecoration(
-                      hintText: 'Text der Stellenanzeige hier einfügen …',
-                      alignLabelWithHint: true,
+                  const SectionLabel('Stellenanzeige'),
+                  AppCard(
+                    child: TextField(
+                      controller: _jobAd,
+                      focusNode: _jobAdFocus,
+                      minLines: 4,
+                      maxLines: 10,
+                      onChanged: (v) => ref
+                          .read(applicationDocsProvider.notifier)
+                          .updateProfile(profile.id, jobAdText: v),
+                      decoration: const InputDecoration(
+                        hintText: 'Text der Stellenanzeige hier einfügen …',
+                        alignLabelWithHint: true,
+                        border: InputBorder.none,
+                        isCollapsed: true,
+                      ),
                     ),
                   ),
                 ],
-                const SizedBox(height: 20),
-                Text('Lebenslauf', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 6),
-                _CvStatus(
-                  docs: docs,
-                  extracting: _extracting,
-                  onPick: busy ? null : _pickCv,
+                const SectionLabel('Lebenslauf'),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _CvStatus(
+                        docs: docs,
+                        extracting: _extracting,
+                        onPick: busy ? null : _pickCv,
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 8),
+                        Text(_error!,
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(color: theme.colorScheme.error)),
+                      ],
+                    ],
+                  ),
                 ),
-                if (_error != null) ...[
-                  const SizedBox(height: 8),
-                  Text(_error!,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.error)),
-                ],
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
                 FilledButton.icon(
                   onPressed: (ready && !busy && profile != null)
                       ? () => _analyze(profile)
                       : null,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
                   icon: _analyzing
                       ? const SizedBox(
                           height: 18,
@@ -271,7 +301,7 @@ class _UnterlagenScreenState extends ConsumerState<UnterlagenScreen> {
                 ),
                 if (!ready)
                   Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
                     child: Text(
                       'Füge die Stellenanzeige ein und lade deinen Lebenslauf '
                       'hoch, um die Analyse zu starten.',
@@ -280,14 +310,10 @@ class _UnterlagenScreenState extends ConsumerState<UnterlagenScreen> {
                     ),
                   ),
                 if ((profile?.analysis ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Card(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: SelectableText(profile!.analysis,
-                          style: theme.textTheme.bodyMedium),
-                    ),
+                  const SectionLabel('Tipps der KI'),
+                  AppCard(
+                    child: SelectableText(profile!.analysis,
+                        style: theme.textTheme.bodyMedium),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -298,14 +324,24 @@ class _UnterlagenScreenState extends ConsumerState<UnterlagenScreen> {
                                 builder: (_) => const CoachScreen()),
                           )
                       : null,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: accent,
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
                   icon: const Icon(Icons.forum_outlined),
                   label: const Text('Im Bewerbungsgespräch nutzen'),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Übung und allgemeine Orientierung, keine individuelle '
-                  'Bewerbungs- oder Rechtsberatung.',
-                  style: theme.textTheme.labelSmall,
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'Übung und allgemeine Orientierung, keine individuelle '
+                    'Bewerbungs- oder Rechtsberatung.',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant),
+                  ),
                 ),
               ],
             ),
@@ -434,8 +470,11 @@ class _Banner extends StatelessWidget {
             'folgt im Premium.';
     return Container(
       width: double.infinity,
-      color: theme.colorScheme.surfaceContainerHighest,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      decoration: BoxDecoration(
+        color: groupedCard(context),
+        border: Border(bottom: BorderSide(color: hairline(context))),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
       child: Text(text,
           style: theme.textTheme.bodySmall
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),

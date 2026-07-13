@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
 import '../widgets/disclaimer_footer.dart';
+import '../widgets/ui_kit.dart';
 import 'wizard_screen.dart';
 
 /// 30-second quick estimate (the competitors' entry funnel): a fast
@@ -54,97 +55,94 @@ class _QuickEstimateScreenState extends ConsumerState<QuickEstimateScreen> {
     final theme = Theme.of(context);
     final e = _estimate;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Abfindung schätzen')),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text('In 30 Sekunden zur Bandbreite', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 12),
-                _NumberField(
-                  label: 'Bruttomonatsgehalt (€)',
-                  value: _grossMonthEuro,
-                  onChanged: (v) => setState(() => _grossMonthEuro = v),
-                ),
-                const SizedBox(height: 12),
-                _NumberField(
-                  label: 'Beschäftigungsjahre',
-                  value: _tenureYears,
-                  onChanged: (v) => setState(() => _tenureYears = v),
-                ),
-                const SizedBox(height: 12),
-                _NumberField(
-                  label: 'Alter',
-                  value: _age,
-                  onChanged: (v) => setState(() => _age = v),
-                ),
-                const SizedBox(height: 16),
-                Text('Verhandlungsposition', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 4),
-                SegmentedButton<NegotiationStrength>(
+    final accent = abfindungAccent(context);
+
+    return GroupedPage(
+      title: 'Abfindung schätzen',
+      footer: const DisclaimerFooter(),
+      children: [
+        AppHero(
+          accent: accent,
+          eyebrow: 'Schnell-Check',
+          headline: '${euroFromCents(e.lowCents, withDecimals: false)} – '
+              '${euroFromCents(e.highCents, withDecimals: false)}',
+          caption: 'Realistische Bandbreite · Mittelwert '
+              '${euroFromCents(e.pointCents, withDecimals: false)}',
+        ),
+        const SectionLabel('Deine Eckdaten'),
+        AppCard(
+          child: Column(
+            children: [
+              _NumberField(
+                label: 'Bruttomonatsgehalt (€)',
+                value: _grossMonthEuro,
+                onChanged: (v) => setState(() => _grossMonthEuro = v),
+              ),
+              const SizedBox(height: 6),
+              _NumberField(
+                label: 'Beschäftigungsjahre',
+                value: _tenureYears,
+                onChanged: (v) => setState(() => _tenureYears = v),
+              ),
+              const SizedBox(height: 6),
+              _NumberField(
+                label: 'Alter',
+                value: _age,
+                onChanged: (v) => setState(() => _age = v),
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child:
+                    Text('Verhandlungsposition', style: theme.textTheme.labelLarge),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<NegotiationStrength>(
                   segments: const [
                     ButtonSegment(value: NegotiationStrength.schwach, label: Text('Schwach')),
                     ButtonSegment(value: NegotiationStrength.standard, label: Text('Standard')),
                     ButtonSegment(value: NegotiationStrength.stark, label: Text('Stark')),
                   ],
                   selected: {_strength},
+                  showSelectedIcon: false,
                   onSelectionChanged: (s) => setState(() => _strength = s.first),
                 ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _smallBusiness,
-                  onChanged: (v) => setState(() => _smallBusiness = v),
-                  title: const Text('Kleinbetrieb (unter 10 Mitarbeiter)'),
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  color: theme.colorScheme.primaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Realistische Bandbreite',
-                            style: theme.textTheme.labelLarge),
-                        Text(
-                          '${euroFromCents(e.lowCents, withDecimals: false)} – '
-                          '${euroFromCents(e.highCents, withDecimals: false)}',
-                          style: theme.textTheme.headlineSmall
-                              ?.copyWith(color: theme.colorScheme.primary),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Mittelwert ${euroFromCents(e.pointCents, withDecimals: false)} · '
-                          'Regelabfindung (§ 1a) ${euroFromCents(e.regelabfindungCents, withDecimals: false)}'
-                          '${e.cappedByKschG10 ? ' · gekappt auf ${e.kschG10CapMonths} Monatsgehälter (§ 10 KSchG)' : ''}',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Orientierung nach der Faustformel – kein Rechtsanspruch. Die '
-                  'tatsächliche Höhe hängt vom Einzelfall ab.',
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: _startDetailed,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text('Detaillierten Netto-Vergleich starten'),
-                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-                ),
-              ],
-            ),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _smallBusiness,
+                onChanged: (v) => setState(() => _smallBusiness = v),
+                title: const Text('Kleinbetrieb (unter 10 Mitarbeiter)'),
+              ),
+            ],
           ),
-          const DisclaimerFooter(),
-        ],
-      ),
+        ),
+        const SectionLabel('So kommt die Zahl zustande'),
+        AppCard(
+          child: Text(
+            'Regelabfindung (§ 1a) '
+            '${euroFromCents(e.regelabfindungCents, withDecimals: false)}'
+            '${e.cappedByKschG10 ? ' · gekappt auf ${e.kschG10CapMonths} Monatsgehälter (§ 10 KSchG)' : ''}. '
+            'Orientierung nach der Faustformel – kein Rechtsanspruch, die '
+            'tatsächliche Höhe hängt vom Einzelfall ab.',
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ),
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          onPressed: _startDetailed,
+          icon: const Icon(Icons.arrow_forward),
+          label: const Text('Detaillierten Netto-Vergleich starten'),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+          ),
+        ),
+      ],
     );
   }
 }

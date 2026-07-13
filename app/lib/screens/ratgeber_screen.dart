@@ -4,6 +4,7 @@ import '../content/models.dart';
 import '../content/ratgeber_content.dart';
 import '../widgets/disclaimer_footer.dart';
 import '../widgets/help_panel.dart';
+import '../widgets/ui_kit.dart';
 import 'bewerbung_screen.dart';
 import 'non_compete_screen.dart';
 import 'vacation_screen.dart';
@@ -23,91 +24,112 @@ class RatgeberTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final abf = abfindungAccent(context);
+    final bew = bewerbenAccent(context);
+    void push(Widget screen) => Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => screen));
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text('Werkzeuge', style: theme.textTheme.titleMedium),
-        ),
-        Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: const Icon(Icons.translate),
-            title: const Text('Zeugnis-Decoder'),
-            subtitle: const Text('Zeugnissprache in Klartext / Schulnote übersetzen'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ZeugnisDecoderScreen()),
-            ),
+        const SectionLabel('Werkzeuge', topPad: 8),
+        AppGroup(children: [
+          AppRow(
+            accent: bew,
+            icon: Icons.translate,
+            title: 'Zeugnis-Decoder',
+            subtitle: 'Zeugnissprache in Klartext / Schulnote übersetzen',
+            onTap: () => push(const ZeugnisDecoderScreen()),
           ),
-        ),
-        Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: const Icon(Icons.record_voice_over_outlined),
-            title: const Text('Bewerbungstraining'),
-            subtitle: const Text('Interview-Fragen & Gehaltsverhandlung üben'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const BewerbungScreen()),
-            ),
+          AppRow(
+            accent: bew,
+            icon: Icons.record_voice_over_outlined,
+            title: 'Bewerbungstraining',
+            subtitle: 'Interview-Fragen & Gehaltsverhandlung üben',
+            onTap: () => push(const BewerbungScreen()),
           ),
-        ),
-        Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: const Icon(Icons.gavel_outlined),
-            title: const Text('Karenzentschädigung'),
-            subtitle: const Text('Wettbewerbsverbot: was steht dir zu? (§§ 74 ff. HGB)'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const NonCompeteScreen()),
-            ),
+          AppRow(
+            accent: abf,
+            icon: Icons.gavel_outlined,
+            title: 'Karenzentschädigung',
+            subtitle: 'Wettbewerbsverbot: was steht dir zu? (§§ 74 ff. HGB)',
+            onTap: () => push(const NonCompeteScreen()),
           ),
-        ),
-        Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: const Icon(Icons.beach_access_outlined),
-            title: const Text('Resturlaub abgelten'),
-            subtitle: const Text('Offene Urlaubstage auszahlen (§ 7 BUrlG)'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const VacationScreen()),
-            ),
+          AppRow(
+            accent: abf,
+            icon: Icons.beach_access_outlined,
+            title: 'Resturlaub abgelten',
+            subtitle: 'Offene Urlaubstage auszahlen (§ 7 BUrlG)',
+            onTap: () => push(const VacationScreen()),
           ),
-        ),
+        ]),
         for (final category in ArticleCategory.values) ...[
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 8),
-            child: Text(category.label, style: theme.textTheme.titleMedium),
-          ),
-          for (final article in ratgeberArticles.where((a) => a.category == category))
-            Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                title: Text(article.title),
-                subtitle: Text(article.teaser),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => ArticleScreen(article: article)),
-                ),
-              ),
-            ),
+          SectionLabel(category.label),
+          AppGroup(children: [
+            for (final article
+                in ratgeberArticles.where((a) => a.category == category))
+              _ArticleRow(article: article),
+          ]),
         ],
         if (showHelpPanel) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           // No computed scenarios in the info-only path → neutral order.
           const HelpPanel(flagCodes: {}),
         ],
-        const SizedBox(height: 8),
-        Text(
-          'Stand: $contentReviewedOn. Allgemeine Informationen, keine Rechtsberatung '
-          'im Einzelfall.',
-          style: theme.textTheme.labelSmall,
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Stand: $contentReviewedOn. Allgemeine Informationen, keine '
+            'Rechtsberatung im Einzelfall.',
+            style: theme.textTheme.labelSmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
         ),
       ],
+    );
+  }
+}
+
+/// One tappable article row inside a grouped list (no leading icon – the title
+/// carries it).
+class _ArticleRow extends StatelessWidget {
+  const _ArticleRow({required this.article});
+  final Article article;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => ArticleScreen(article: article)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(article.title,
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 2),
+                  Text(article.teaser,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right,
+                size: 20,
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -120,7 +142,13 @@ class RatgeberScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ratgeber')),
+      backgroundColor: groupedBackground(context),
+      appBar: AppBar(
+        title: const Text('Ratgeber'),
+        backgroundColor: groupedBackground(context),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+      ),
       body: const Column(
         children: [
           Expanded(child: RatgeberTab(showHelpPanel: true)),
@@ -140,45 +168,55 @@ class ArticleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(article.category.label)),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(article.title, style: theme.textTheme.headlineSmall),
-                const SizedBox(height: 16),
-                for (final section in article.sections) ...[
-                  Text(section.heading, style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(section.body, style: theme.textTheme.bodyLarge),
-                  const SizedBox(height: 16),
-                ],
-                const Divider(),
-                const SizedBox(height: 8),
-                Text('Rechtsgrundlagen', style: theme.textTheme.labelLarge),
+    return GroupedPage(
+      title: article.category.label,
+      footer: const DisclaimerFooter(),
+      children: [
+        const SizedBox(height: 6),
+        Text(article.title,
+            style: theme.textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+        const SizedBox(height: 14),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < article.sections.length; i++) ...[
+                if (i > 0) const SizedBox(height: 16),
+                Text(article.sections[i].heading,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    for (final source in article.sources)
-                      Chip(
-                        label: Text(source),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text('Stand: $contentReviewedOn', style: theme.textTheme.labelSmall),
+                Text(article.sections[i].body,
+                    style: theme.textTheme.bodyLarge),
               ],
-            ),
+            ],
           ),
-          const DisclaimerFooter(),
-        ],
-      ),
+        ),
+        const SectionLabel('Rechtsgrundlagen'),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final source in article.sources)
+                    Chip(
+                      label: Text(source),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text('Stand: $contentReviewedOn',
+                  style: theme.textTheme.labelSmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

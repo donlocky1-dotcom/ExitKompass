@@ -7,6 +7,7 @@ import '../state/wizard.dart';
 import '../util/format.dart';
 import '../util/labels.dart';
 import '../widgets/help_panel.dart';
+import '../widgets/ui_kit.dart';
 import 'detail_screen.dart';
 
 /// Comparison tab (spec §4 screen 6): the four scenarios compared by their
@@ -18,7 +19,6 @@ class ComparisonTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final result = ref.watch(wizardProvider).compute();
-    final theme = Theme.of(context);
 
     const order = [
       ScenarioType.kuendigungAg,
@@ -27,23 +27,41 @@ class ComparisonTab extends ConsumerWidget {
       ScenarioType.bleiben,
     ];
     final best = result.bestScenario;
+    final accent = abfindungAccent(context);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       children: [
-        Text(
-          'Kumulierte Netto-Summe über ${result.horizonMonths} Monate',
-          style: theme.textTheme.titleMedium,
+        const SectionLabel('Netto über die Laufzeit', topPad: 8),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Kumulierte Netto-Summe über ${result.horizonMonths} Monate',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 210,
+                child:
+                    _ComparisonChart(result: result, order: order, best: best),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 220,
-          child: _ComparisonChart(result: result, order: order, best: best),
-        ),
-        const SizedBox(height: 16),
-        for (final type in order)
-          _ScenarioCard(result: result, type: type, isBest: type == best),
-        const SizedBox(height: 8),
+        const SectionLabel('Deine Optionen'),
+        AppGroup(children: [
+          for (final type in order)
+            _ScenarioRow(
+              result: result,
+              type: type,
+              isBest: type == best,
+              accent: accent,
+            ),
+        ]),
+        const SizedBox(height: 10),
         HelpPanel(flagCodes: _flagCodesOf(result)),
       ],
     );
@@ -67,6 +85,7 @@ class _ComparisonChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final accent = abfindungAccent(context);
     final values = [
       for (final t in order) result.scenarios[t]!.cumulativeNetCents / 100.0,
     ];
@@ -112,8 +131,8 @@ class _ComparisonChart extends StatelessWidget {
                   width: 30,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                   color: order[i] == best
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.secondaryContainer,
+                      ? accent
+                      : accent.withValues(alpha: 0.22),
                 ),
               ],
             ),
@@ -123,69 +142,121 @@ class _ComparisonChart extends StatelessWidget {
   }
 }
 
-class _ScenarioCard extends StatelessWidget {
-  const _ScenarioCard({required this.result, required this.type, required this.isBest});
+class _ScenarioRow extends StatelessWidget {
+  const _ScenarioRow({
+    required this.result,
+    required this.type,
+    required this.isBest,
+    required this.accent,
+  });
 
   final AggregateResult result;
   final ScenarioType type;
   final bool isBest;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scenario = result.scenarios[type]!;
     final delta = result.deltaToBaselineCents(type);
+    final isBaseline = type == ScenarioType.bleiben;
+    final positive = delta >= 0;
+    final deltaColor = positive
+        ? (theme.brightness == Brightness.dark
+            ? const Color(0xFF46C98B)
+            : const Color(0xFF1F9D5A))
+        : theme.colorScheme.error;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: isBest ? theme.colorScheme.primaryContainer : null,
-      child: ListTile(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => DetailScreen(type: type)),
-        ),
-        title: Row(
-          children: [
-            Expanded(child: Text(scenarioLabel(type))),
-            if (type == ScenarioType.bleiben)
-              _Chip(label: 'Referenz', color: theme.colorScheme.outline)
-            else if (isBest)
-              Icon(Icons.star, size: 18, color: theme.colorScheme.primary),
-          ],
-        ),
-        subtitle: Column(
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => DetailScreen(type: type)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(euroFromCents(scenario.cumulativeNetCents),
-                style: theme.textTheme.titleMedium),
-            if (type == ScenarioType.bleiben)
-              Text(
-                'Ausgangswert (volles Gehalt) – dient nur als Vergleichsmaßstab.',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              )
-            else
-              Text(
-                '${signedEuroFromCents(delta)} gegenüber „Bleiben"',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: delta >= 0 ? Colors.green.shade700 : theme.colorScheme.error,
-                ),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: isBest
+                    ? accent
+                    : accent.withValues(alpha: isBaseline ? 0.10 : 0.14),
+                borderRadius: BorderRadius.circular(9),
               ),
-            if (scenario.flags.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.flag_outlined,
-                        size: 14, color: theme.colorScheme.onSurfaceVariant),
-                    const SizedBox(width: 4),
-                    Text('${scenario.flags.length} Hinweis(e)',
-                        style: theme.textTheme.bodySmall),
-                  ],
-                ),
+              child: Icon(
+                isBest
+                    ? Icons.star_rounded
+                    : (isBaseline ? Icons.home_outlined : Icons.trending_flat),
+                size: 19,
+                color: isBest ? Colors.white : accent,
               ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(scenarioLabel(type),
+                            style: theme.textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w500)),
+                      ),
+                      if (isBaseline)
+                        _Chip(
+                            label: 'Referenz',
+                            color: theme.colorScheme.onSurfaceVariant),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(euroFromCents(scenario.cumulativeNetCents),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  if (isBaseline)
+                    Text(
+                      'Ausgangswert (volles Gehalt) – nur Vergleichsmaßstab.',
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    )
+                  else
+                    Text(
+                      '${signedEuroFromCents(delta)} gegenüber „Bleiben"',
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: deltaColor, fontWeight: FontWeight.w600),
+                    ),
+                  if (scenario.flags.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Row(
+                        children: [
+                          Icon(Icons.flag_outlined,
+                              size: 13,
+                              color: theme.colorScheme.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Text('${scenario.flags.length} Hinweis(e)',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant)),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Icon(Icons.chevron_right,
+                  size: 20,
+                  color:
+                      theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+            ),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
@@ -203,7 +274,7 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: color),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label,

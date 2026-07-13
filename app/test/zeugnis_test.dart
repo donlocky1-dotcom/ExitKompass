@@ -55,7 +55,8 @@ void main() {
         child: MaterialApp(home: ZeugnisDecoderScreen())));
     await tester.pumpAndSettle();
 
-    expect(find.text('Leistungsbeurteilung'), findsOneWidget);
+    // Category headers render as iOS-style uppercased section labels.
+    expect(find.text('Leistungsbeurteilung'.toUpperCase()), findsOneWidget);
     expect(find.textContaining('stets zu unserer vollsten Zufriedenheit'), findsOneWidget);
     // The "sehr gut" grade badge shows a "1".
     expect(find.text('1'), findsWidgets);

@@ -93,6 +93,12 @@ void main() {
 
   testWidgets('UnterlagenScreen enables analysis and shows the result',
       (tester) async {
+    // Tall viewport so the whole scrollable form is laid out at once.
+    tester.view.physicalSize = const Size(1200, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -109,8 +115,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Stellenanzeige'), findsOneWidget);
-    expect(find.text('Lebenslauf'), findsOneWidget);
+    // Section headers render as iOS-style uppercased labels.
+    expect(find.text('Stellenanzeige'.toUpperCase()), findsOneWidget);
+    expect(find.text('Lebenslauf'.toUpperCase()), findsOneWidget);
 
     final analyze = find.text('Analysieren');
     await tester.ensureVisible(analyze);

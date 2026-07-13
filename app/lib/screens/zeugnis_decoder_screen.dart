@@ -6,6 +6,7 @@ import '../coach/coach_providers.dart';
 import '../content/zeugnis.dart';
 import '../util/file_pick.dart';
 import '../widgets/disclaimer_footer.dart';
+import '../widgets/ui_kit.dart';
 
 /// Decodes the coded language of an Arbeitszeugnis. Two ways in: upload a
 /// photo/PDF and let the AI estimate the overall grade and flag what is
@@ -82,154 +83,150 @@ class _ZeugnisDecoderScreenState extends ConsumerState<ZeugnisDecoderScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Zeugnis-Decoder')),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Card(
-                  color: cs.surfaceContainerHighest,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.auto_awesome, size: 18, color: cs.primary),
-                            const SizedBox(width: 8),
-                            Text('Zeugnis prüfen lassen',
-                                style: theme.textTheme.titleMedium),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Lade ein Foto oder PDF deines Arbeitszeugnisses hoch – '
-                          'die KI schätzt die Gesamtnote aus den Formulierungen '
-                          'und sagt dir, ob etwas fehlt oder versteckt negativ ist.',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _busy ? null : _pickAndAnalyze,
-                          icon: _busy
-                              ? const SizedBox(
-                                  height: 18,
-                                  width: 18,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2))
-                              : const Icon(Icons.upload_file),
-                          label: Text(_busy
-                              ? 'Analysiere …'
-                              : (_result.isEmpty
-                                  ? 'Foto / PDF hochladen'
-                                  : 'Anderes Zeugnis')),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 8),
-                          Text(_error!,
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: cs.error)),
-                        ],
-                        const SizedBox(height: 8),
-                        Text(
-                          _engine.isAiPowered
-                              ? 'Übung, keine Rechtsberatung. Dein Zeugnis wird '
-                                  'zur Analyse an einen KI-Dienst (Gemini) gesendet.'
-                              : 'Vorschau ohne KI – die Auswertung (Gemini) folgt '
-                                  'im Premium.',
-                          style: theme.textTheme.labelSmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                        if (_result.isNotEmpty) ...[
-                          const SizedBox(height: 14),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: cs.surface,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: SelectableText(_result,
-                                style: theme.textTheme.bodyMedium),
-                          ),
-                        ],
-                      ],
+    final accent = bewerbenAccent(context);
+    return GroupedPage(
+      title: 'Zeugnis-Decoder',
+      footer: const DisclaimerFooter(),
+      children: [
+        const SectionLabel('Von der KI prüfen lassen', topPad: 8),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: accent,
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: const Icon(Icons.auto_awesome,
+                        size: 17, color: Colors.white),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text('Codes zum Nachschlagen', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(
-                  'Arbeitszeugnisse müssen wohlwollend sein (§ 109 GewO), '
-                  'deshalb steckt die eigentliche Bewertung oft in festen '
-                  'Formulierungen. Hier die gängigen Codes – als Orientierung, '
-                  'nicht als rechtliche Bewertung deines Zeugnisses.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 8),
-                for (final category in ZeugnisCategory.values) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 4),
-                    child: Text(category.label, style: theme.textTheme.titleMedium),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Zeugnis prüfen lassen',
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600)),
                   ),
-                  for (final p in zeugnisPhrases.where((p) => p.category == category))
-                    _PhraseCard(phrase: p),
                 ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Lade ein Foto oder PDF deines Arbeitszeugnisses hoch – '
+                'die KI schätzt die Gesamtnote aus den Formulierungen '
+                'und sagt dir, ob etwas fehlt oder versteckt negativ ist.',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  onPressed: _busy ? null : _pickAndAnalyze,
+                  icon: _busy
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.upload_file),
+                  label: Text(_busy
+                      ? 'Analysiere …'
+                      : (_result.isEmpty
+                          ? 'Foto / PDF hochladen'
+                          : 'Anderes Zeugnis')),
+                ),
+              ),
+              if (_error != null) ...[
                 const SizedBox(height: 8),
-                Text(
-                  'Stand: $zeugnisReviewedOn. Konventionen der '
-                  'Arbeitsgerichtsbarkeit, kein Gesetzestext. Im Zweifel ein '
-                  'Fachanwalt prüfen lassen.',
-                  style: theme.textTheme.labelSmall,
+                Text(_error!,
+                    style:
+                        theme.textTheme.bodySmall?.copyWith(color: cs.error)),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                _engine.isAiPowered
+                    ? 'Übung, keine Rechtsberatung. Dein Zeugnis wird zur '
+                        'Analyse an einen KI-Dienst (Gemini) gesendet.'
+                    : 'Vorschau ohne KI – die Auswertung (Gemini) folgt im '
+                        'Premium.',
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              if (_result.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: groupedBackground(context),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SelectableText(_result,
+                      style: theme.textTheme.bodyMedium),
                 ),
               ],
-            ),
+            ],
           ),
-          const DisclaimerFooter(),
+        ),
+        for (final category in ZeugnisCategory.values) ...[
+          SectionLabel(category.label),
+          AppGroup(children: [
+            for (final p in zeugnisPhrases.where((p) => p.category == category))
+              _PhraseRow(phrase: p),
+          ]),
         ],
-      ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Arbeitszeugnisse müssen wohlwollend sein (§ 109 GewO), deshalb '
+            'steckt die eigentliche Bewertung oft in festen Formulierungen. '
+            'Stand: $zeugnisReviewedOn. Konventionen der Arbeitsgerichtsbarkeit, '
+            'kein Gesetzestext – im Zweifel ein Fachanwalt prüfen lassen.',
+            style: theme.textTheme.labelSmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _PhraseCard extends StatelessWidget {
-  const _PhraseCard({required this.phrase});
+class _PhraseRow extends StatelessWidget {
+  const _PhraseRow({required this.phrase});
 
   final ZeugnisPhrase phrase;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (phrase.grade != null) ...[
-              _GradeBadge(grade: phrase.grade!),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('„${phrase.phrase}"',
-                      style: theme.textTheme.bodyLarge
-                          ?.copyWith(fontStyle: FontStyle.italic)),
-                  const SizedBox(height: 4),
-                  Text(phrase.meaning, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (phrase.grade != null) ...[
+            _GradeBadge(grade: phrase.grade!),
+            const SizedBox(width: 12),
           ],
-        ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('„${phrase.phrase}"',
+                    style: theme.textTheme.bodyLarge
+                        ?.copyWith(fontStyle: FontStyle.italic)),
+                const SizedBox(height: 4),
+                Text(phrase.meaning,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

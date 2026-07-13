@@ -6,6 +6,7 @@ import 'package:printing/printing.dart';
 import '../pdf/dossier.dart';
 import '../state/wizard.dart';
 import '../timeline/timeline.dart';
+import '../widgets/ui_kit.dart';
 import 'comparison_tab.dart';
 import 'liquidity_tab.dart';
 import 'timeline_screen.dart';
@@ -41,8 +42,12 @@ class _FinanzenScreenState extends ConsumerState<FinanzenScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: groupedBackground(context),
       appBar: AppBar(
         title: const Text('Finanzen'),
+        backgroundColor: groupedBackground(context),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.tune),
@@ -61,7 +66,7 @@ class _FinanzenScreenState extends ConsumerState<FinanzenScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
             child: SizedBox(
               width: double.infinity,
               child: SegmentedButton<int>(

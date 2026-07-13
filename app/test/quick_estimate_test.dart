@@ -26,7 +26,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(QuickEstimateScreen), findsOneWidget);
-    expect(find.text('Realistische Bandbreite'), findsOneWidget);
+    expect(find.textContaining('Realistische Bandbreite'), findsOneWidget);
   });
 
   testWidgets('the quick estimate carries into the detailed wizard', (tester) async {

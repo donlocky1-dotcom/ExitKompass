@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
 import '../widgets/disclaimer_footer.dart';
+import '../widgets/ui_kit.dart';
 
 /// Calculator for the Karenzentschädigung of a post-contractual non-compete
 /// (§§ 74 ff. HGB). Inputs are transient; the salary is prefilled from the
@@ -33,129 +34,115 @@ class _NonCompeteScreenState extends ConsumerState<NonCompeteScreen> {
       relocationForced: _relocation,
     );
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Karenzentschädigung')),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+    final accent = abfindungAccent(context);
+
+    return GroupedPage(
+      title: 'Karenzentschädigung',
+      footer: const DisclaimerFooter(),
+      children: [
+        const SectionLabel('Dein Wettbewerbsverbot', topPad: 8),
+        AppCard(
+          child: Column(
+            children: [
+              _EuroField(
+                label: 'Letzte Bezüge / Monat (€)',
+                value: _benefitsEuro,
+                onChanged: (v) => setState(() => _benefitsEuro = v),
+              ),
+              const SizedBox(height: 6),
+              _EuroField(
+                label: 'Dauer des Verbots (Monate)',
+                value: _durationMonths,
+                onChanged: (v) => setState(() => _durationMonths = v),
+              ),
+              const SizedBox(height: 6),
+              _EuroField(
+                label: 'Anderweitiges Einkommen / Monat (€)',
+                value: _otherIncomeEuro,
+                onChanged: (v) => setState(() => _otherIncomeEuro = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                value: _relocation,
+                onChanged: (v) => setState(() => _relocation = v),
+                title: const Text('Verbot erzwingt einen Umzug'),
+                subtitle: const Text('erhöht die Anrechnungsgrenze auf 125 %'),
+              ),
+            ],
+          ),
+        ),
+        const SectionLabel('Was dir zusteht'),
+        AppCard(
+          child: Column(
+            children: [
+              StatRow(
+                label: 'Mindest-Entschädigung / Monat (50 %)',
+                value: euroFromCents(r.minMonthlyCompensationCents,
+                    withDecimals: false),
+                accent: accent,
+                emphasise: true,
+              ),
+              if (r.reducedByCredit) ...[
+                Divider(height: 14, color: hairline(context)),
+                StatRow(
+                    label: 'Anrechnung / Monat (§ 74c)',
+                    value:
+                        '− ${euroFromCents(r.creditPerMonthCents, withDecimals: false)}'),
+                StatRow(
+                    label: 'Nach Anrechnung / Monat',
+                    value: euroFromCents(r.monthlyCompensationAfterCreditCents,
+                        withDecimals: false)),
+              ],
+              Divider(height: 14, color: hairline(context)),
+              StatRow(
+                label: 'Gesamt über $_durationMonths Monate',
+                value: r.reducedByCredit
+                    ? euroFromCents(r.totalAfterCreditCents, withDecimals: false)
+                    : euroFromCents(r.totalCompensationCents,
+                        withDecimals: false),
+                accent: accent,
+                emphasise: true,
+              ),
+            ],
+          ),
+        ),
+        if (r.exceedsMaxDuration) ...[
+          const SizedBox(height: 12),
+          AppCard(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Ein nachvertragliches Wettbewerbsverbot bindet dich nur, '
-                  'wenn der Arbeitgeber für die Dauer mindestens die Hälfte '
-                  'deiner zuletzt bezogenen Bezüge zahlt (§ 74 Abs. 2 HGB).',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                _EuroField(
-                  label: 'Letzte Bezüge / Monat (€)',
-                  value: _benefitsEuro,
-                  onChanged: (v) => setState(() => _benefitsEuro = v),
-                ),
-                const SizedBox(height: 12),
-                _EuroField(
-                  label: 'Dauer des Verbots (Monate)',
-                  value: _durationMonths,
-                  onChanged: (v) => setState(() => _durationMonths = v),
-                ),
-                const SizedBox(height: 12),
-                _EuroField(
-                  label: 'Anderweitiges Einkommen / Monat (€)',
-                  value: _otherIncomeEuro,
-                  onChanged: (v) => setState(() => _otherIncomeEuro = v),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  value: _relocation,
-                  onChanged: (v) => setState(() => _relocation = v),
-                  title: const Text('Verbot erzwingt einen Umzug'),
-                  subtitle: const Text('erhöht die Anrechnungsgrenze auf 125 %'),
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  color: theme.colorScheme.primaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _row('Mindest-Entschädigung / Monat (50 %)',
-                            euroFromCents(r.minMonthlyCompensationCents, withDecimals: false),
-                            theme, emphasise: true),
-                        if (r.reducedByCredit) ...[
-                          _row('Anrechnung / Monat (§ 74c)',
-                              '− ${euroFromCents(r.creditPerMonthCents, withDecimals: false)}',
-                              theme),
-                          _row('Nach Anrechnung / Monat',
-                              euroFromCents(r.monthlyCompensationAfterCreditCents,
-                                  withDecimals: false),
-                              theme),
-                        ],
-                        const Divider(),
-                        _row(
-                          'Gesamt über $_durationMonths Monate',
-                          r.reducedByCredit
-                              ? euroFromCents(r.totalAfterCreditCents, withDecimals: false)
-                              : euroFromCents(r.totalCompensationCents, withDecimals: false),
-                          theme,
-                          emphasise: true,
-                        ),
-                      ],
-                    ),
+                Icon(Icons.warning_amber_outlined,
+                    size: 19, color: theme.colorScheme.error),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Ein Wettbewerbsverbot ist höchstens zwei Jahre '
+                    'verbindlich (§ 74a Abs. 1 HGB). Für den darüber '
+                    'hinausgehenden Teil bist du in der Regel nicht gebunden.',
+                    style: theme.textTheme.bodySmall,
                   ),
-                ),
-                if (r.exceedsMaxDuration)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.warning_amber_outlined,
-                            size: 18, color: theme.colorScheme.error),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Ein Wettbewerbsverbot ist höchstens zwei Jahre '
-                            'verbindlich (§ 74a Abs. 1 HGB). Für den darüber '
-                            'hinausgehenden Teil bist du in der Regel nicht '
-                            'gebunden.',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Text(
-                  '„Bezüge" sind die zuletzt bezogenen vertragsmäßigen '
-                  'Leistungen (auch regelmäßige variable Anteile, Sachbezüge). '
-                  'Orientierung, keine Rechtsberatung – im Zweifel Fachanwalt.',
-                  style: theme.textTheme.labelSmall,
                 ),
               ],
             ),
           ),
-          const DisclaimerFooter(),
         ],
-      ),
-    );
-  }
-
-  Widget _row(String label, String value, ThemeData theme, {bool emphasise = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-          Text(value,
-              style: (emphasise
-                      ? theme.textTheme.titleMedium
-                      : theme.textTheme.bodyMedium)
-                  ?.copyWith(fontWeight: FontWeight.bold)),
-        ],
-      ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Ein nachvertragliches Wettbewerbsverbot bindet dich nur, wenn der '
+            'Arbeitgeber mindestens die Hälfte deiner zuletzt bezogenen Bezüge '
+            'zahlt (§ 74 Abs. 2 HGB). „Bezüge" sind die vertragsmäßigen '
+            'Leistungen (auch variable Anteile, Sachbezüge). Orientierung, '
+            'keine Rechtsberatung – im Zweifel Fachanwalt.',
+            style: theme.textTheme.labelSmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }

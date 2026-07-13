@@ -7,6 +7,7 @@ import '../state/wizard.dart';
 import '../util/format.dart';
 import '../util/labels.dart';
 import '../widgets/disclaimer_footer.dart';
+import '../widgets/ui_kit.dart';
 
 /// Scenario detail (spec §4 screen 7): monthly net cashflow chart, key
 /// figures and the risk/information flags.
@@ -20,75 +21,62 @@ class DetailScreen extends ConsumerWidget {
     final result = ref.watch(wizardProvider).compute();
     final scenario = result.scenarios[type]!;
     final theme = Theme.of(context);
+    final accent = abfindungAccent(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(scenarioLabel(type))),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _StatTile(
-                  label: 'Kumulierte Netto-Summe über ${result.horizonMonths} Monate',
-                  value: euroFromCents(scenario.cumulativeNetCents),
-                  emphasise: true,
-                ),
-                _StatTile(
-                  label: 'Differenz zu „Bleiben"',
-                  value: signedEuroFromCents(result.deltaToBaselineCents(type)),
-                ),
-                const SizedBox(height: 20),
-                Text('Monatlicher Netto-Cashflow', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 12),
-                SizedBox(height: 200, child: _CashflowChart(scenario: scenario)),
-                const SizedBox(height: 8),
-                _Legend(),
-                const SizedBox(height: 20),
-                if (scenario.flags.isNotEmpty) ...[
-                  Text('Hinweise', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  for (final flag in scenario.flags)
-                    Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: Icon(Icons.info_outline, color: theme.colorScheme.primary),
-                        title: Text(flag.message),
-                      ),
-                    ),
-                ],
-              ],
-            ),
+    return GroupedPage(
+      title: scenarioLabel(type),
+      footer: const DisclaimerFooter(),
+      children: [
+        const SectionLabel('Ergebnis', topPad: 8),
+        AppCard(
+          child: Column(
+            children: [
+              StatRow(
+                label:
+                    'Kumulierte Netto-Summe über ${result.horizonMonths} Monate',
+                value: euroFromCents(scenario.cumulativeNetCents),
+                accent: accent,
+                emphasise: true,
+              ),
+              Divider(height: 18, color: hairline(context)),
+              StatRow(
+                label: 'Differenz zu „Bleiben"',
+                value: signedEuroFromCents(result.deltaToBaselineCents(type)),
+              ),
+            ],
           ),
-          const DisclaimerFooter(),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({required this.label, required this.value, this.emphasise = false});
-  final String label;
-  final String value;
-  final bool emphasise;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: theme.textTheme.bodyMedium),
-          Text(
-            value,
-            style: (emphasise ? theme.textTheme.headlineSmall : theme.textTheme.titleMedium)
-                ?.copyWith(color: emphasise ? theme.colorScheme.primary : null),
+        ),
+        const SectionLabel('Monatlicher Netto-Cashflow'),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 200, child: _CashflowChart(scenario: scenario)),
+              const SizedBox(height: 10),
+              _Legend(),
+            ],
           ),
+        ),
+        if (scenario.flags.isNotEmpty) ...[
+          const SectionLabel('Hinweise'),
+          AppGroup(children: [
+            for (final flag in scenario.flags)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 19, color: accent),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: Text(flag.message,
+                            style: theme.textTheme.bodyMedium)),
+                  ],
+                ),
+              ),
+          ]),
         ],
-      ),
+      ],
     );
   }
 }

@@ -59,8 +59,9 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('Die STAR-Methode'), findsOneWidget);
-    expect(find.text('Workbook als PDF'), findsOneWidget);
+    // These render as iOS-style uppercased section labels.
+    expect(find.text('Die STAR-Methode'.toUpperCase()), findsOneWidget);
+    expect(find.text('Workbook als PDF'.toUpperCase()), findsOneWidget);
     expect(find.text('Leeres Workbook'), findsOneWidget);
     expect(find.text('Ausgefülltes Workbook'), findsOneWidget);
     expect(find.text('Grundhaltung: Verkauf dich über deinen Wert'), findsOneWidget);

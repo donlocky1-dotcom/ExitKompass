@@ -7,6 +7,7 @@ import '../state/application_docs.dart';
 import '../state/coach_session.dart';
 import '../state/wizard.dart';
 import '../util/format.dart';
+import '../widgets/ui_kit.dart';
 
 /// Chat-style interview simulation. Uses the pluggable [CoachEngine]; the
 /// local preview scripts an interview offline. Clearly framed as practice,
@@ -218,8 +219,12 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
         ? 'Abfindungsverhandlung'
         : 'Bewerbungsgespräch';
     return Scaffold(
+      backgroundColor: groupedBackground(context),
       appBar: AppBar(
         title: const Text('Gesprächssimulation'),
+        backgroundColor: groupedBackground(context),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(24),
           child: Padding(
@@ -493,35 +498,48 @@ class _Composer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 8, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: TextField(
-                controller: controller,
-                minLines: 1,
-                maxLines: 5,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => onSend(),
-                decoration: const InputDecoration(
-                  hintText: 'Deine Antwort …',
-                  border: OutlineInputBorder(),
-                  isDense: true,
+    return Container(
+      decoration: BoxDecoration(
+        color: groupedCard(context),
+        border: Border(top: BorderSide(color: hairline(context))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  minLines: 1,
+                  maxLines: 5,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => onSend(),
+                  decoration: InputDecoration(
+                    hintText: 'Deine Antwort …',
+                    filled: true,
+                    fillColor: groupedBackground(context),
+                    isDense: true,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 6),
-            IconButton.filled(
-              onPressed: enabled ? onSend : null,
-              icon: const Icon(Icons.send),
-              tooltip: 'Senden',
-              color: theme.colorScheme.onPrimary,
-            ),
-          ],
+              const SizedBox(width: 6),
+              IconButton.filled(
+                onPressed: enabled ? onSend : null,
+                icon: const Icon(Icons.send),
+                tooltip: 'Senden',
+                color: theme.colorScheme.onPrimary,
+              ),
+            ],
+          ),
         ),
       ),
     );

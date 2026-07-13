@@ -431,3 +431,116 @@ class TitledPage extends StatelessWidget {
     );
   }
 }
+
+/// A pushed detail page in the grouped iOS style: flat app bar over the grouped
+/// background, a scrolling body and an optional pinned footer (disclaimer).
+class GroupedPage extends StatelessWidget {
+  const GroupedPage({
+    required this.title,
+    required this.children,
+    this.actions,
+    this.footer,
+    this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 24),
+    super.key,
+  });
+
+  final String title;
+  final List<Widget> children;
+  final List<Widget>? actions;
+  final Widget? footer;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: groupedBackground(context),
+      appBar: AppBar(
+        title: Text(title),
+        actions: actions,
+        backgroundColor: groupedBackground(context),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(padding: padding, children: children),
+          ),
+          ?footer,
+        ],
+      ),
+    );
+  }
+}
+
+/// A plain rounded grouped card holding arbitrary content (a chart, a form, a
+/// block of figures). Use [AppGroup] instead when the content is a list of
+/// tappable [AppRow]s.
+class AppCard extends StatelessWidget {
+  const AppCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+    super.key,
+  });
+
+  final Widget child;
+  final EdgeInsets padding;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final inner = Padding(padding: padding, child: child);
+    return Material(
+      color: groupedCard(context),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: onTap == null ? inner : InkWell(onTap: onTap, child: inner),
+    );
+  }
+}
+
+/// A label/value line for a block of figures inside an [AppCard]. The emphasised
+/// variant renders the value big and in the accent colour.
+class StatRow extends StatelessWidget {
+  const StatRow({
+    required this.label,
+    required this.value,
+    this.accent,
+    this.emphasise = false,
+    super.key,
+  });
+
+  final String label;
+  final String value;
+  final Color? accent;
+  final bool emphasise;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final a = accent ?? theme.colorScheme.primary;
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: emphasise ? 4 : 7),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Text(label,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            value,
+            style: emphasise
+                ? theme.textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.w700, color: a)
+                : theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}

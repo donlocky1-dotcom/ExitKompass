@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../state/wizard.dart';
 import '../timeline/timeline.dart';
+import '../widgets/ui_kit.dart';
 
 /// Fristen tab (spec §4 screen 10): the personalised deadline timeline
 /// derived from the wizard inputs.
@@ -15,18 +16,23 @@ class TimelineTab extends ConsumerWidget {
     final data = ref.watch(wizardProvider);
     final items = buildTimeline(data);
     final fmt = DateFormat('dd.MM.yyyy');
+    final theme = Theme.of(context);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       children: [
-        Text('Deine Fristen', style: Theme.of(context).textTheme.titleMedium),
+        const SectionLabel('Fristen', topPad: 8),
+        Text('Deine Fristen',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(
           'Aus deinen Angaben berechnet. Termine sind Orientierungswerte – im '
           'Zweifel bei Agentur für Arbeit oder Anwalt bestätigen lassen.',
-          style: Theme.of(context).textTheme.bodySmall,
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         for (final item in items) _TimelineCard(item: item, fmt: fmt),
       ],
     );
@@ -48,14 +54,22 @@ class _TimelineCard extends StatelessWidget {
       TimelineUrgency.info => (theme.colorScheme.onSurfaceVariant, Icons.info_outline),
     };
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: AppCard(
+        padding: const EdgeInsets.all(14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, size: 19, color: color),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

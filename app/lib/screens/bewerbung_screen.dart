@@ -7,6 +7,7 @@ import '../content/bewerbung.dart';
 import '../pdf/workbook_pdf.dart';
 import '../state/workbook.dart';
 import '../widgets/disclaimer_footer.dart';
+import '../widgets/ui_kit.dart';
 import 'coach_screen.dart';
 import 'unterlagen_screen.dart';
 
@@ -18,150 +19,124 @@ class BewerbungScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Bewerbungstraining')),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Card(
-                  color: theme.colorScheme.primaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Die STAR-Methode', style: theme.textTheme.titleSmall),
-                        const SizedBox(height: 4),
-                        Text(starMethodExplainer, style: theme.textTheme.bodyMedium),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const _CoachCard(),
-                const SizedBox(height: 8),
-                const _UnterlagenCard(),
-                const SizedBox(height: 8),
-                const _WorkbookExport(),
-                const SizedBox(height: 8),
-                Text('Grundhaltung: Verkauf dich über deinen Wert',
-                    style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                for (final p in valueSellingPrinciples)
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(p.title,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                  color: theme.colorScheme.primary)),
-                          const SizedBox(height: 4),
-                          Text(p.body, style: theme.textTheme.bodyMedium),
-                        ],
-                      ),
-                    ),
-                  ),
-                for (final category in InterviewCategory.values) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 4),
-                    child: Text(category.label, style: theme.textTheme.titleMedium),
-                  ),
-                  for (final q in interviewQuestions.where((q) => q.category == category))
-                    _QuestionTile(question: q),
+    final accent = bewerbenAccent(context);
+    return GroupedPage(
+      title: 'Bewerbungstraining',
+      footer: const DisclaimerFooter(),
+      children: [
+        const SectionLabel('Werkzeuge', topPad: 8),
+        AppGroup(children: const [
+          _CoachRow(),
+          _UnterlagenRow(),
+        ]),
+        const SectionLabel('Die STAR-Methode'),
+        AppCard(
+          child: Text(starMethodExplainer, style: theme.textTheme.bodyMedium),
+        ),
+        const SectionLabel('Workbook als PDF'),
+        const _WorkbookExport(),
+        const SizedBox(height: 18),
+        Text('Grundhaltung: Verkauf dich über deinen Wert',
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        for (final p in valueSellingPrinciples)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(p.title,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(color: accent, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(p.body, style: theme.textTheme.bodyMedium),
                 ],
-                const SizedBox(height: 12),
-                Text('Brainteaser & Case-Fragen', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(brainteaserIntro, style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 8),
-                for (final s in brainteaserSteps)
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(s.title,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                  color: theme.colorScheme.primary)),
-                          const SizedBox(height: 4),
-                          Text(s.body, style: theme.textTheme.bodyMedium),
-                        ],
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Text(
-                  'Stand: $bewerbungReviewedOn. Allgemeine Tipps, keine '
-                  'individuelle Bewerbungs- oder Karriereberatung.',
-                  style: theme.textTheme.labelSmall,
-                ),
-              ],
+              ),
             ),
           ),
-          const DisclaimerFooter(),
+        for (final category in InterviewCategory.values) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 6),
+            child: Text(category.label,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+          ),
+          for (final q in interviewQuestions.where((q) => q.category == category))
+            _QuestionTile(question: q),
         ],
-      ),
+        const SizedBox(height: 18),
+        Text('Brainteaser & Case-Fragen',
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 6),
+        Text(brainteaserIntro, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 10),
+        for (final s in brainteaserSteps)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s.title,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(color: accent, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(s.body, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Stand: $bewerbungReviewedOn. Allgemeine Tipps, keine individuelle '
+            'Bewerbungs- oder Karriereberatung.',
+            style: theme.textTheme.labelSmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
 
 /// Entry point to the interview chat simulation.
-class _CoachCard extends StatelessWidget {
-  const _CoachCard();
+class _CoachRow extends StatelessWidget {
+  const _CoachRow();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: theme.colorScheme.secondaryContainer,
-      child: ListTile(
-        leading: Icon(Icons.forum_outlined,
-            color: theme.colorScheme.onSecondaryContainer),
-        title: const Text('Gesprächssimulation'),
-        subtitle: const Text(
-            'Übe das Bewerbungsgespräch im Dialog. Vorschau – lokal, ohne KI '
-            '(KI-Coach folgt im Premium).'),
-        isThreeLine: true,
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const CoachScreen()),
-        ),
+    return AppRow(
+      accent: bewerbenAccent(context),
+      icon: Icons.forum_outlined,
+      title: 'Gesprächssimulation',
+      badge: 'KI',
+      subtitle: 'Übe das Bewerbungsgespräch im Dialog',
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const CoachScreen()),
       ),
     );
   }
 }
 
 /// Entry point to the CV ↔ job-ad document check.
-class _UnterlagenCard extends StatelessWidget {
-  const _UnterlagenCard();
+class _UnterlagenRow extends StatelessWidget {
+  const _UnterlagenRow();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: theme.colorScheme.secondaryContainer,
-      child: ListTile(
-        leading: Icon(Icons.description_outlined,
-            color: theme.colorScheme.onSecondaryContainer),
-        title: const Text('Unterlagen-Check'),
-        subtitle: const Text(
-            'Lebenslauf hochladen und mit der Stellenanzeige vergleichen lassen. '
-            'Die KI gibt Tipps – und nutzt beides im Gesprächstraining.'),
-        isThreeLine: true,
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const UnterlagenScreen()),
-        ),
+    return AppRow(
+      accent: bewerbenAccent(context),
+      icon: Icons.description_outlined,
+      title: 'Unterlagen-Check',
+      badge: 'KI',
+      subtitle: 'Lebenslauf mit der Stellenanzeige abgleichen',
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const UnterlagenScreen()),
       ),
     );
   }
@@ -175,38 +150,41 @@ class _QuestionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ExpansionTile(
-        leading: const Icon(Icons.help_outline),
-        title: Text('„${question.question}"'),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text('So gehst du ran', style: theme.textTheme.labelLarge),
-          ),
-          const SizedBox(height: 4),
-          Text(question.approach, style: theme.textTheme.bodyMedium),
-          if (question.tips.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            for (final tip in question.tips)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• '),
-                    Expanded(child: Text(tip, style: theme.textTheme.bodySmall)),
-                  ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppCard(
+        padding: EdgeInsets.zero,
+        child: ExpansionTile(
+          shape: const Border(),
+          leading: Icon(Icons.help_outline, color: bewerbenAccent(context)),
+          title: Text('„${question.question}"'),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('So gehst du ran', style: theme.textTheme.labelLarge),
+            ),
+            const SizedBox(height: 4),
+            Text(question.approach, style: theme.textTheme.bodyMedium),
+            if (question.tips.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              for (final tip in question.tips)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('• '),
+                      Expanded(child: Text(tip, style: theme.textTheme.bodySmall)),
+                    ],
+                  ),
                 ),
-              ),
+            ],
+            const SizedBox(height: 12),
+            _WorkbookField(questionId: question.id),
           ],
-          const SizedBox(height: 12),
-          _WorkbookField(questionId: question.id),
-        ],
+        ),
       ),
     );
   }
@@ -234,38 +212,37 @@ class _WorkbookExport extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Workbook als PDF', style: theme.textTheme.titleSmall),
-            const SizedBox(height: 2),
-            Text(
-              'Leer zum Ausdrucken und offline Ausfüllen – oder ausgefüllt mit '
-              'deinen gespeicherten Antworten.',
-              style: theme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.description_outlined, size: 18),
-                  label: const Text('Leeres Workbook'),
-                  onPressed: () => _share(ref, empty: true),
-                ),
-                FilledButton.tonalIcon(
-                  icon: const Icon(Icons.download, size: 18),
-                  label: const Text('Ausgefülltes Workbook'),
-                  onPressed: () => _share(ref, empty: false),
-                ),
-              ],
-            ),
-          ],
-        ),
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Workbook als PDF', style: theme.textTheme.titleSmall
+              ?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(
+            'Leer zum Ausdrucken und offline Ausfüllen – oder ausgefüllt mit '
+            'deinen gespeicherten Antworten.',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                icon: const Icon(Icons.description_outlined, size: 18),
+                label: const Text('Leeres Workbook'),
+                onPressed: () => _share(ref, empty: true),
+              ),
+              FilledButton.tonalIcon(
+                icon: const Icon(Icons.download, size: 18),
+                label: const Text('Ausgefülltes Workbook'),
+                onPressed: () => _share(ref, empty: false),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
